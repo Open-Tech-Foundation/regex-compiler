@@ -173,6 +173,24 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
     expect(result.pattern).toBe("(?:abc)*");
   });
 
+  test("Email Validator", () => {
+    const dsl = {
+      nodes: [
+        { startOfLine: true },
+        { capture: { name: "user", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z0-9._%+-", exclude: false } }, oneOrMore: true } }] } },
+        { literal: "@" },
+        { capture: { name: "domain", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z0-9.-", exclude: false } }, oneOrMore: true } }] } },
+        { literal: "." },
+        { capture: { name: "tld", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z", exclude: false } }, min: 2 } }] } },
+        { endOfLine: true }
+      ],
+      flags: { ignoreCase: true }
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("^(?<user>[a-zA-Z0-9._%+-]+)@(?<domain>[a-zA-Z0-9.-]+)\\.(?<tld>[a-zA-Z]{2,})$");
+    expect(result.flags).toBe("i");
+  });
+
   test("Complex Nested Choice and Repeats", () => {
     const dsl = {
       nodes: [
