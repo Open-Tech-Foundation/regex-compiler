@@ -6,9 +6,16 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun --filter website dev"
+    "dev": "bun --filter website dev",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "check": "biome check --apply .",
+    "test": "bun test packages/compiler",
+    "changeset": "changeset"
   },
   "devDependencies": {
+    "@biomejs/biome": "latest",
+    "@changesets/cli": "latest",
     "bun-types": "latest"
   },
   "peerDependencies": {
