@@ -1,6 +1,4 @@
-import { RegexDSL, RegexNode, CharClassType, Flags } from "./schema";
-
-export { RegexDSL, RegexNode, CharClassType, Flags };
+export type { RegexDSL, RegexNode, CharClassType, Flags } from "./schema";
 
 export interface CompiledRegex {
   pattern: string;
@@ -10,5 +8,5 @@ export interface CompiledRegex {
 export interface ValidationResult {
   success: boolean;
   error?: string;
-  data?: RegexDSL;
+  data?: any; // Using any here to avoid circular dependency issues with the schema-derived type
 }

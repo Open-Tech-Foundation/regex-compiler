@@ -1,4 +1,4 @@
-import { RegexDSL, RegexNode, CharClassType, Flags, CompiledRegex, ValidationResult } from "./types";
+import type { RegexDSL, RegexNode, CharClassType, Flags, CompiledRegex, ValidationResult } from "./types";
 import { RegexDSLSchema } from "./schema";
 
 function escapeLiteral(str: string): string {
@@ -155,7 +155,7 @@ export function compileToJS(input: any): CompiledRegex | { error: string } {
     return { error: validation.error! };
   }
 
-  const dsl = validation.data!;
+  const dsl = validation.data as RegexDSL;
   return {
     pattern: dsl.nodes.map(compileNode).join(""),
     flags: compileFlags(dsl.flags)

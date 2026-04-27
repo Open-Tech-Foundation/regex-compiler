@@ -42,19 +42,77 @@ const EXAMPLE_REGISTRY = [
     testCase: "hello.world@opentf.org"
   },
   {
-    id: "lookaround",
-    title: "Password Strength (Advanced)",
-    description: "Uses lookaheads to ensure the password contains at least one digit.",
-    features: ["Lookahead", "Groups", "Char Sets"],
+    id: "password",
+    title: "Strong Password (Lookahead)",
+    description: "Requires at least one letter, one number, and 8+ characters using Lookaheads.",
+    features: ["Lookahead", "Quantifiers", "Anchors"],
     dsl: {
       nodes: [
         { startOfLine: true },
         { lookaround: { type: "positiveLookahead", pattern: [{ repeat: { type: "any", zeroOrMore: true } }, { repeat: { type: "digit", count: 1 } }] } },
-        { repeat: { type: "word", min: 8 } },
+        { lookaround: { type: "positiveLookahead", pattern: [{ repeat: { type: "any", zeroOrMore: true } }, { charSet: { chars: "a-zA-Z" } }] } },
+        { repeat: { type: "any", min: 8 } },
         { endOfLine: true }
       ]
     },
     testCase: "Password123"
+  },
+  {
+    id: "html",
+    title: "HTML Tag Matcher",
+    description: "Matches HTML tags and ensures the closing tag name matches the opening one.",
+    features: ["Backreferences", "Named Groups", "Literal Escaping"],
+    dsl: {
+      nodes: [
+        { literal: "<" },
+        { capture: { name: "tag", pattern: [{ repeat: { type: "word", oneOrMore: true } }] } },
+        { literal: ">" },
+        { repeat: { type: "any", zeroOrMore: true } },
+        { literal: "</" },
+        { backreference: "tag" },
+        { literal: ">" }
+      ],
+      flags: { global: true }
+    },
+    testCase: "<div>Hello World</div>"
+  },
+  {
+    id: "word",
+    title: "Whole Word Search",
+    description: "Finds a specific word only if it's not part of another word.",
+    features: ["Word Boundaries", "Literal"],
+    dsl: {
+      nodes: [
+        { wordBoundary: true },
+        { literal: "OpenTF" },
+        { wordBoundary: true }
+      ]
+    },
+    testCase: "Welcome to OpenTF foundation"
+  },
+  {
+    id: "csv",
+    title: "Simple CSV Column",
+    description: "Matches a column in a CSV, optionally enclosed in quotes.",
+    features: ["Non-capturing Groups", "Choice", "Quantifiers"],
+    dsl: {
+      nodes: [
+        {
+          choice: [
+            [
+              { literal: "\"" },
+              { capture: { name: "quoted", pattern: [{ repeat: { type: { charSet: { chars: "\"", exclude: true } }, zeroOrMore: true } }] } },
+              { literal: "\"" }
+            ],
+            [
+              { capture: { name: "unquoted", pattern: [{ repeat: { type: { charSet: { chars: ",", exclude: true } }, zeroOrMore: true } }] } }
+            ]
+          ]
+        }
+      ],
+      flags: { global: true }
+    },
+    testCase: "\"John Doe\",30,New York"
   }
 ];
 
