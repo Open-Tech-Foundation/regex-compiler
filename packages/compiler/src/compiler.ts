@@ -1,4 +1,4 @@
-import type { RegexDSL, RegexNode, CharClassType, Flags, CompiledRegex, ValidationResult } from "./types";
+import type { RegexDSL, RegexNode, CharClassType, Flags, CompiledRegex, ValidationResult, CharSetType } from "./types";
 import { RegexDSLSchema } from "./schema";
 
 function escapeLiteral(str: string): string {
@@ -7,16 +7,17 @@ function escapeLiteral(str: string): string {
 
 function mapCharClass(type: CharClassType): string {
   switch (type) {
-    case "digit":
-      return "\\d";
-    case "word":
-      return "\\w";
-    case "whitespace":
-      return "\\s";
-    case "any":
-      return ".";
-    default:
-      return "";
+    case "digit": return "\\d";
+    case "nonDigit": return "\\D";
+    case "word": return "\\w";
+    case "nonWord": return "\\W";
+    case "whitespace": return "\\s";
+    case "nonWhitespace": return "\\S";
+    case "tab": return "\\t";
+    case "newline": return "\\n";
+    case "carriageReturn": return "\\r";
+    case "any": return ".";
+    default: return "";
   }
 }
 
@@ -29,7 +30,25 @@ function compileFlags(flags?: Flags): string {
   if (flags.dotAll) f += "s";
   if (flags.unicode) f += "u";
   if (flags.sticky) f += "y";
+  if (flags.indices) f += "d";
+  if (flags.unicodeSets) f += "v";
   return f;
+}
+
+function compileCharSet(node: CharSetType): string {
+  if ("chars" in node) {
+    return `${node.exclude ? "^" : ""}${node.chars}`;
+  }
+  if ("intersection" in node) {
+    return (node.intersection as CharSetType[])
+      .map(n => `[${compileCharSet(n)}]`)
+      .join("&&");
+  }
+  if ("subtraction" in node) {
+    const { left, right } = node.subtraction;
+    return `[${compileCharSet(left)}]--[${compileCharSet(right)}]`;
+  }
+  return "";
 }
 
 function compileNode(node: RegexNode): string {
@@ -37,9 +56,23 @@ function compileNode(node: RegexNode): string {
     return escapeLiteral(node.literal);
   }
 
+  if ("hex" in node) {
+    return `\\x${node.hex}`;
+  }
+
+  if ("unicode" in node) {
+    return node.unicode.length > 4 
+      ? `\\u{${node.unicode}}` 
+      : `\\u${node.unicode}`;
+  }
+
   if ("charSet" in node) {
-    const { chars, exclude } = node.charSet;
-    return `[${exclude ? "^" : ""}${chars}]`;
+    return `[${compileCharSet(node.charSet)}]`;
+  }
+
+  if ("unicodeProperty" in node) {
+    const { property, exclude } = node.unicodeProperty;
+    return `\\${exclude ? "P" : "p"}{${property}}`;
   }
 
   if ("startOfLine" in node && node.startOfLine) {
@@ -108,7 +141,7 @@ function compileNode(node: RegexNode): string {
   }
 
   if ("repeat" in node) {
-    const { type, count, min, max, optional, oneOrMore, zeroOrMore } = node.repeat;
+    const { type, count, min, max, optional, oneOrMore, zeroOrMore, lazy } = node.repeat;
     let base = "";
     if (typeof type === "string") {
       base = mapCharClass(type as CharClassType);
@@ -122,14 +155,19 @@ function compileNode(node: RegexNode): string {
       }
     }
 
-    if (optional) return `${base}?`;
-    if (oneOrMore) return `${base}+`;
-    if (zeroOrMore) return `${base}*`;
-    
-    if (count !== undefined) return `${base}{${count}}`;
-    if (min !== undefined && max !== undefined) return `${base}{${min},${max}}`;
-    if (min !== undefined) return `${base}{${min},}`;
-    return base;
+    let quantifier = "";
+    if (optional) quantifier = "?";
+    else if (oneOrMore) quantifier = "+";
+    else if (zeroOrMore) quantifier = "*";
+    else if (count !== undefined && count > 1) quantifier = `{${count}}`;
+    else if (min !== undefined && max !== undefined) quantifier = `{${min},${max}}`;
+    else if (min !== undefined) quantifier = `{${min},}`;
+
+    if (lazy && quantifier) {
+      quantifier += "?";
+    }
+
+    return `${base}${quantifier}`;
   }
 
   return "";

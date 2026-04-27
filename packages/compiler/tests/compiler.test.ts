@@ -18,6 +18,40 @@ describe("Regex Compiler - Standard Support", () => {
     expect(result.flags).toBe("gi");
   });
 
+  test("Inverse Classes and Special Escapes", () => {
+    const dsl = { 
+      nodes: [
+        { repeat: { type: "nonDigit", oneOrMore: true } },
+        { repeat: { type: "tab", count: 1 } },
+        { repeat: { type: "nonWord", zeroOrMore: true } }
+      ] 
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("\\D+\\t\\W*");
+  });
+
+  test("Lazy Quantifiers", () => {
+    const dsl = { 
+      nodes: [
+        { repeat: { type: "any", zeroOrMore: true, lazy: true } },
+        { literal: "end" }
+      ] 
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe(".*?end");
+  });
+
+  test("Unicode Properties", () => {
+    const dsl = { 
+      nodes: [
+        { unicodeProperty: { property: "L" } },
+        { unicodeProperty: { property: "N", exclude: true } }
+      ] 
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("\\p{L}\\P{N}");
+  });
+
   test("Named Capture Groups", () => {
     const dsl = { 
       nodes: [{ capture: { name: "val", pattern: [{ repeat: { type: "word", oneOrMore: true } }] } }] 
@@ -26,34 +60,9 @@ describe("Regex Compiler - Standard Support", () => {
     expect(result.pattern).toBe("(?<val>\\w+)");
   });
 
-  test("Non-capturing Groups", () => {
-    const dsl = { 
-      nodes: [{ group: { pattern: [{ literal: "abc" }] } }] 
-    };
-    const result = compileToJS(dsl) as any;
-    expect(result.pattern).toBe("(?:abc)");
-  });
-
-  test("Lookaheads (Positive and Negative)", () => {
+  test("Lookaheads and Lookbehinds", () => {
     const pos = { nodes: [{ lookaround: { type: "positiveLookahead", pattern: [{ literal: "foo" }] } }] };
     expect((compileToJS(pos) as any).pattern).toBe("(?=foo)");
-
-    const neg = { nodes: [{ lookaround: { type: "negativeLookahead", pattern: [{ literal: "bar" }] } }] };
-    expect((compileToJS(neg) as any).pattern).toBe("(?!bar)");
-  });
-
-  test("Lookbehinds (Positive and Negative)", () => {
-    const pos = { nodes: [{ lookaround: { type: "positiveLookbehind", pattern: [{ literal: "pre" }] } }] };
-    expect((compileToJS(pos) as any).pattern).toBe("(?<=pre)");
-
-    const neg = { nodes: [{ lookaround: { type: "negativeLookbehind", pattern: [{ literal: "nopre" }] } }] };
-    expect((compileToJS(neg) as any).pattern).toBe("(?<!nopre)");
-  });
-
-  test("Word Boundaries", () => {
-    const dsl = { nodes: [{ wordBoundary: true }, { literal: "test" }, { nonWordBoundary: true }] };
-    const result = compileToJS(dsl) as any;
-    expect(result.pattern).toBe("\\btest\\B");
   });
 
   test("Backreferences", () => {

@@ -1,13 +1,14 @@
 import { compileToJS } from "@opentf/regex-compiler";
 import Editor from "../components/Editor";
 import Modal from "../components/Modal";
+import { REFERENCE_DATA } from "../data/reference";
 
 const EXAMPLE_REGISTRY = [
   {
     id: "phone",
     title: "International Phone Number",
     description: "Matches a standard 10-digit phone number with dashes.",
-    features: ["Named Groups", "Fixed Count", "Literal Escaping"],
+    features: ["Named Groups", "Fixed Count"],
     dsl: {
       nodes: [
         { startOfLine: true },
@@ -26,7 +27,7 @@ const EXAMPLE_REGISTRY = [
     id: "email",
     title: "Email Validator",
     description: "A robust pattern for validating common email address formats.",
-    features: ["Character Sets", "Quantifiers", "Sub-patterns"],
+    features: ["Character Sets", "Quantifiers"],
     dsl: {
       nodes: [
         { startOfLine: true },
@@ -43,9 +44,9 @@ const EXAMPLE_REGISTRY = [
   },
   {
     id: "password",
-    title: "Strong Password (Lookahead)",
+    title: "Strong Password",
     description: "Requires at least one letter, one number, and 8+ characters using Lookaheads.",
-    features: ["Lookahead", "Quantifiers", "Anchors"],
+    features: ["Lookahead", "Anchors"],
     dsl: {
       nodes: [
         { startOfLine: true },
@@ -61,7 +62,7 @@ const EXAMPLE_REGISTRY = [
     id: "html",
     title: "HTML Tag Matcher",
     description: "Matches HTML tags and ensures the closing tag name matches the opening one.",
-    features: ["Backreferences", "Named Groups", "Literal Escaping"],
+    features: ["Backreferences", "Named Groups"],
     dsl: {
       nodes: [
         { literal: "<" },
@@ -80,7 +81,7 @@ const EXAMPLE_REGISTRY = [
     id: "word",
     title: "Whole Word Search",
     description: "Finds a specific word only if it's not part of another word.",
-    features: ["Word Boundaries", "Literal"],
+    features: ["Word Boundaries"],
     dsl: {
       nodes: [
         { wordBoundary: true },
@@ -92,9 +93,9 @@ const EXAMPLE_REGISTRY = [
   },
   {
     id: "csv",
-    title: "Simple CSV Column",
+    title: "CSV Column Parser",
     description: "Matches a column in a CSV, optionally enclosed in quotes.",
-    features: ["Non-capturing Groups", "Choice", "Quantifiers"],
+    features: ["Choice", "Non-capturing Groups"],
     dsl: {
       nodes: [
         {
@@ -113,13 +114,35 @@ const EXAMPLE_REGISTRY = [
       flags: { global: true }
     },
     testCase: "\"John Doe\",30,New York"
+  },
+  {
+    id: "es2024",
+    title: "ES2024 Unicode Sets",
+    description: "Finds consonants by subtracting vowels from the alphabet using the 'v' flag.",
+    features: ["Set Subtraction", "v Flag"],
+    dsl: {
+      nodes: [
+        { 
+          charSet: { 
+            subtraction: {
+              left: { chars: "A-Z" },
+              right: { chars: "AEIOU" }
+            }
+          } 
+        }
+      ],
+      flags: { global: true, unicodeSets: true }
+    },
+    testCase: "ABCDEFGHIJKL"
   }
 ];
 
 export default function HomePage() {
   const dslText = $state(JSON.stringify(EXAMPLE_REGISTRY[0].dsl, null, 2));
   const testString = $state(EXAMPLE_REGISTRY[0].testCase);
-  const isModalOpen = $state(false);
+  const isLibraryOpen = $state(false);
+  const isReferenceOpen = $state(false);
+  const searchQuery = $state("");
 
   const compilationResult = $derived(() => {
     try {
@@ -133,13 +156,6 @@ export default function HomePage() {
   const compiledRegex = $derived(() => {
     if (compilationResult && 'pattern' in compilationResult) {
       return `/${compilationResult.pattern}/${compilationResult.flags || ""}`;
-    }
-    return null;
-  });
-
-  const compilationError = $derived(() => {
-    if (compilationResult && 'error' in compilationResult) {
-      return compilationResult.error;
     }
     return null;
   });
@@ -162,10 +178,22 @@ export default function HomePage() {
     return Object.entries(matchData.groups);
   });
 
+  const filteredReference = $derived(() => {
+    if (!searchQuery) return REFERENCE_DATA;
+    return REFERENCE_DATA.map(cat => ({
+      ...cat,
+      items: cat.items.filter(item => 
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.regex.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    })).filter(cat => cat.items.length > 0);
+  });
+
   const loadExample = (example) => {
     dslText = JSON.stringify(example.dsl, null, 2);
     testString = example.testCase;
-    isModalOpen = false;
+    isLibraryOpen = false;
   };
 
   return (
@@ -173,12 +201,20 @@ export default function HomePage() {
       {/* Left: Editor */}
       <div className="flex-1 flex flex-col border-r border-[#27272a]">
         <div className="px-5 py-2 border-b border-[#27272a] bg-[#0c0c0e] flex justify-between items-center h-14">
-          <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">DSL Editor</span>
+          <div className="flex items-center gap-6">
+            <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">DSL Editor</span>
+            <button 
+              onclick={() => isReferenceOpen = true}
+              className="text-[11px] font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-widest"
+            >
+              Reference Guide
+            </button>
+          </div>
           <button 
-            onclick={() => isModalOpen = true}
+            onclick={() => isLibraryOpen = true}
             className="px-4 py-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95"
           >
-            Load Sample
+            Browse Library
           </button>
         </div>
         <div className="flex-1 overflow-hidden p-2">
@@ -194,19 +230,15 @@ export default function HomePage() {
         {/* Compiled Result */}
         <div className="p-8 border-b border-[#27272a]">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-5">Compiled Output</h2>
-          <div className={`p-6 bg-[#09090b] border rounded-xl relative group shadow-inner ${compilationError ? "border-red-500/50" : "border-[#27272a]"}`}>
-            {compilationError ? (
+          <div className={`p-6 bg-[#09090b] border rounded-xl relative group shadow-inner ${compilationResult?.error ? "border-red-500/50" : "border-[#27272a]"}`}>
+            {compilationResult?.error ? (
               <div className="flex flex-col gap-2">
                 <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Validation Error</span>
-                <code className="text-red-400/80 text-xs font-mono break-words leading-relaxed">
-                  {compilationError}
-                </code>
+                <code className="text-red-400/80 text-xs font-mono break-words leading-relaxed">{compilationResult.error}</code>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                <code className="text-blue-400 break-all font-mono text-lg font-semibold tracking-tight">
-                  {compiledRegex}
-                </code>
+                <code className="text-blue-400 break-all font-mono text-lg font-semibold tracking-tight">{compiledRegex}</code>
                 <button 
                   onclick={() => navigator.clipboard.writeText(compiledRegex)}
                   className="absolute right-3 top-3 p-2.5 opacity-0 group-hover:opacity-100 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all text-zinc-300"
@@ -259,11 +291,12 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Example Selection Modal */}
+      {/* Library Modal */}
       <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => isModalOpen = false}
-        title="Browse Library"
+        isOpen={isLibraryOpen} 
+        onClose={() => isLibraryOpen = false}
+        title="Sample Library"
+        size="sm"
       >
         <div className="grid grid-cols-1 gap-4">
           {EXAMPLE_REGISTRY.map(ex => (
@@ -272,17 +305,56 @@ export default function HomePage() {
               className="group flex flex-col p-6 bg-[#09090b] border border-[#27272a] hover:border-blue-500/50 rounded-xl transition-all text-left"
             >
               <h4 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors mb-2">{ex.title}</h4>
-              <p className="text-base text-zinc-400 line-clamp-2 leading-relaxed mb-4">
-                {ex.description}
-              </p>
+              <p className="text-base text-zinc-400 line-clamp-2 leading-relaxed mb-4">{ex.description}</p>
               <div className="flex flex-wrap gap-2">
                 {ex.features.map(feat => (
-                  <span className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-400 uppercase tracking-tight">
-                    {feat}
-                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-400 uppercase tracking-tight">{feat}</span>
                 ))}
               </div>
             </button>
+          ))}
+        </div>
+      </Modal>
+
+      {/* Reference Guide Modal */}
+      <Modal 
+        isOpen={isReferenceOpen} 
+        onClose={() => isReferenceOpen = false}
+        title="Reference Guide"
+        size="xl"
+      >
+        <div className="sticky -top-10 -mx-10 px-10 pt-2 pb-8 bg-[#0c0c0e]/80 backdrop-blur-md z-20 border-b border-zinc-800/50 mb-10">
+          <input
+            type="text"
+            placeholder="Search standards (e.g., lookahead, quantifier)..."
+            value={searchQuery}
+            oninput={(e) => searchQuery = e.target.value}
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-6 py-4 text-base text-white focus:border-blue-500 outline-none transition-all shadow-inner"
+          />
+        </div>
+        <div className="space-y-12 pr-2">
+          {filteredReference.map(cat => (
+            <div key={cat.category}>
+              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-zinc-200 mb-6 pb-3 border-b border-zinc-700/50">{cat.category}</h3>
+              <div className="space-y-2">
+                {cat.items.map((item, idx) => (
+                  <div key={idx} className="flex flex-col gap-4 py-8 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.015] -mx-4 px-4 rounded-xl transition-colors group">
+                    <div className="flex flex-col gap-3">
+                      <h4 className="text-base font-bold text-white tracking-tight group-hover:text-blue-400 transition-colors">{item.title}</h4>
+                      <div className="flex items-center gap-10">
+                        <div className="shrink-0">
+                          <code className="text-blue-400 font-mono font-bold text-base bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 whitespace-nowrap">{item.regex}</code>
+                        </div>
+                        <code className="text-sm text-zinc-300 font-mono break-all leading-relaxed bg-zinc-900/50 px-3 py-2 rounded-lg border border-zinc-800/50 flex-1">{item.dsl}</code>
+                      </div>
+                    </div>
+                    <p className="text-sm font-medium text-zinc-400 group-hover:text-zinc-300 transition-colors leading-relaxed max-w-4xl">
+                      {item.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </Modal>
