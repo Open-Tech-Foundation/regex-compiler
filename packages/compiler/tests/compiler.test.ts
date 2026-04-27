@@ -1,44 +1,99 @@
 import { expect, test, describe } from "bun:test";
 import { compileToJS } from "../src/compiler";
-import { RegexDSL } from "../src/types";
 
-describe("Regex Compiler Expansion", () => {
-  test("Character set", () => {
-    const dsl: RegexDSL = [{ charSet: { chars: "a-z", exclude: false } }];
-    expect(compileToJS(dsl)).toBe("[a-z]");
+describe("Regex Compiler - Standard Support", () => {
+  test("Basic Literals and Escaping", () => {
+    const dsl = { nodes: [{ literal: "hello.world" }] };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("hello\\.world");
   });
 
-  test("Excluded character set", () => {
-    const dsl: RegexDSL = [{ charSet: { chars: "0-9", exclude: true } }];
-    expect(compileToJS(dsl)).toBe("[^0-9]");
+  test("Character Classes and Flags", () => {
+    const dsl = { 
+      nodes: [{ repeat: { type: "digit", oneOrMore: true } }],
+      flags: { global: true, ignoreCase: true }
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("\\d+");
+    expect(result.flags).toBe("gi");
   });
 
-  test("Choice (Alternation)", () => {
-    const dsl: RegexDSL = [
-      {
-        choice: [
-          [{ literal: "cat" }],
-          [{ literal: "dog" }]
-        ]
-      }
-    ];
-    expect(compileToJS(dsl)).toBe("(?:cat|dog)");
+  test("Named Capture Groups", () => {
+    const dsl = { 
+      nodes: [{ capture: { name: "val", pattern: [{ repeat: { type: "word", oneOrMore: true } }] } }] 
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("(?<val>\\w+)");
   });
 
-  test("Boolean quantifiers", () => {
-    expect(compileToJS([{ repeat: { type: "digit", optional: true } }])).toBe("\\d?");
-    expect(compileToJS([{ repeat: { type: "digit", oneOrMore: true } }])).toBe("\\d+");
-    expect(compileToJS([{ repeat: { type: "digit", zeroOrMore: true } }])).toBe("\\d*");
+  test("Non-capturing Groups", () => {
+    const dsl = { 
+      nodes: [{ group: { pattern: [{ literal: "abc" }] } }] 
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("(?:abc)");
   });
 
-  test("Complex mix", () => {
-    const dsl: RegexDSL = [
-      { startOfLine: true },
-      { charSet: { chars: "A-Z" } },
-      { repeat: { type: "word", zeroOrMore: true } },
-      { choice: [[{ literal: ".com" }], [{ literal: ".org" }]] },
-      { endOfLine: true }
-    ];
-    expect(compileToJS(dsl)).toBe("^[A-Z]\\w*(?:\\.com|\\.org)$");
+  test("Lookaheads (Positive and Negative)", () => {
+    const pos = { nodes: [{ lookaround: { type: "positiveLookahead", pattern: [{ literal: "foo" }] } }] };
+    expect((compileToJS(pos) as any).pattern).toBe("(?=foo)");
+
+    const neg = { nodes: [{ lookaround: { type: "negativeLookahead", pattern: [{ literal: "bar" }] } }] };
+    expect((compileToJS(neg) as any).pattern).toBe("(?!bar)");
+  });
+
+  test("Lookbehinds (Positive and Negative)", () => {
+    const pos = { nodes: [{ lookaround: { type: "positiveLookbehind", pattern: [{ literal: "pre" }] } }] };
+    expect((compileToJS(pos) as any).pattern).toBe("(?<=pre)");
+
+    const neg = { nodes: [{ lookaround: { type: "negativeLookbehind", pattern: [{ literal: "nopre" }] } }] };
+    expect((compileToJS(neg) as any).pattern).toBe("(?<!nopre)");
+  });
+
+  test("Word Boundaries", () => {
+    const dsl = { nodes: [{ wordBoundary: true }, { literal: "test" }, { nonWordBoundary: true }] };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("\\btest\\B");
+  });
+
+  test("Backreferences", () => {
+    const dsl = { 
+      nodes: [
+        { capture: { name: "quote", pattern: [{ charSet: { chars: "'\"" } }] } },
+        { repeat: { type: "any", zeroOrMore: true } },
+        { backreference: "quote" }
+      ] 
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("(?<quote>['\"]).*\\k<quote>");
+  });
+});
+
+describe("Regex Compiler - Edge Cases & Validation", () => {
+  test("Invalid DSL - Unrecognized Node", () => {
+    const dsl = { nodes: [{ unknownNode: true }] };
+    const result = compileToJS(dsl) as any;
+    expect(result.error).toBeDefined();
+    expect(result.error).toContain("nodes.0: Invalid input");
+  });
+
+  test("Complex Nested Choice and Repeats", () => {
+    const dsl = {
+      nodes: [
+        { 
+          repeat: { 
+            type: {
+              choice: [
+                [{ literal: "a" }],
+                [{ repeat: { type: "digit", count: 2 } }]
+              ]
+            },
+            optional: true 
+          } 
+        }
+      ]
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("(?:a|\\d{2})?");
   });
 });

@@ -8,15 +8,18 @@ const EXAMPLE_REGISTRY = [
     title: "International Phone Number",
     description: "Matches a standard 10-digit phone number with dashes.",
     features: ["Named Groups", "Fixed Count", "Literal Escaping"],
-    dsl: [
-      { startOfLine: true },
-      { capture: { name: "areaCode", pattern: [{ repeat: { type: "digit", count: 3 } }] } },
-      { literal: "-" },
-      { capture: { name: "prefix", pattern: [{ repeat: { type: "digit", count: 3 } }] } },
-      { literal: "-" },
-      { capture: { name: "line", pattern: [{ repeat: { type: "digit", count: 4 } }] } },
-      { endOfLine: true }
-    ],
+    dsl: {
+      nodes: [
+        { startOfLine: true },
+        { capture: { name: "areaCode", pattern: [{ repeat: { type: "digit", count: 3 } }] } },
+        { literal: "-" },
+        { capture: { name: "prefix", pattern: [{ repeat: { type: "digit", count: 3 } }] } },
+        { literal: "-" },
+        { capture: { name: "line", pattern: [{ repeat: { type: "digit", count: 4 } }] } },
+        { endOfLine: true }
+      ],
+      flags: { global: true }
+    },
     testCase: "123-456-7890"
   },
   {
@@ -24,40 +27,34 @@ const EXAMPLE_REGISTRY = [
     title: "Email Validator",
     description: "A robust pattern for validating common email address formats.",
     features: ["Character Sets", "Quantifiers", "Sub-patterns"],
-    dsl: [
-      { startOfLine: true },
-      { capture: { name: "user", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z0-9._%+-", exclude: false } }, oneOrMore: true } }] } },
-      { literal: "@" },
-      { capture: { name: "domain", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z0-9.-", exclude: false } }, oneOrMore: true } }] } },
-      { literal: "." },
-      { capture: { name: "tld", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z", exclude: false } }, min: 2 } }] } },
-      { endOfLine: true }
-    ],
+    dsl: {
+      nodes: [
+        { startOfLine: true },
+        { capture: { name: "user", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z0-9._%+-", exclude: false } }, oneOrMore: true } }] } },
+        { literal: "@" },
+        { capture: { name: "domain", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z0-9.-", exclude: false } }, oneOrMore: true } }] } },
+        { literal: "." },
+        { capture: { name: "tld", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z", exclude: false } }, min: 2 } }] } },
+        { endOfLine: true }
+      ],
+      flags: { ignoreCase: true }
+    },
     testCase: "hello.world@opentf.org"
   },
   {
-    id: "slug",
-    title: "URL Slug Creator",
-    description: "Matches valid URL slugs containing only lowercase letters, numbers, and dashes.",
-    features: ["Char Sets", "Global Match", "Sequence"],
-    dsl: [
-      { startOfLine: true },
-      { repeat: { type: { charSet: { chars: "a-z0-9-", exclude: false } }, oneOrMore: true } },
-      { endOfLine: true }
-    ],
-    testCase: "the-quick-brown-fox-123"
-  },
-  {
-    id: "password",
-    title: "Strong Password (Basic)",
-    description: "Requires letters, digits, and special characters with a minimum length.",
-    features: ["Complex Sets", "Quantifiers", "Grouping"],
-    dsl: [
-      { startOfLine: true },
-      { repeat: { type: { charSet: { chars: "a-zA-Z0-9!@#$%^&*", exclude: false } }, min: 8, max: 20 } },
-      { endOfLine: true }
-    ],
-    testCase: "StrongP@ss123"
+    id: "lookaround",
+    title: "Password Strength (Advanced)",
+    description: "Uses lookaheads to ensure the password contains at least one digit.",
+    features: ["Lookahead", "Groups", "Char Sets"],
+    dsl: {
+      nodes: [
+        { startOfLine: true },
+        { lookaround: { type: "positiveLookahead", pattern: [{ repeat: { type: "any", zeroOrMore: true } }, { repeat: { type: "digit", count: 1 } }] } },
+        { repeat: { type: "word", min: 8 } },
+        { endOfLine: true }
+      ]
+    },
+    testCase: "Password123"
   }
 ];
 
@@ -66,19 +63,33 @@ export default function HomePage() {
   const testString = $state(EXAMPLE_REGISTRY[0].testCase);
   const isModalOpen = $state(false);
 
-  const compiledRegex = $derived(() => {
+  const compilationResult = $derived(() => {
     try {
       const dsl = JSON.parse(dslText);
       return compileToJS(dsl);
     } catch (e) {
-      return null;
+      return { error: "Invalid JSON format" };
     }
   });
 
+  const compiledRegex = $derived(() => {
+    if (compilationResult && 'pattern' in compilationResult) {
+      return `/${compilationResult.pattern}/${compilationResult.flags || ""}`;
+    }
+    return null;
+  });
+
+  const compilationError = $derived(() => {
+    if (compilationResult && 'error' in compilationResult) {
+      return compilationResult.error;
+    }
+    return null;
+  });
+
   const matchData = $derived(() => {
-    if (!compiledRegex) return null;
+    if (!compilationResult || compilationResult.error) return null;
     try {
-      const re = new RegExp(compiledRegex);
+      const re = new RegExp(compilationResult.pattern, compilationResult.flags);
       const match = testString.match(re);
       return match;
     } catch (e) {
@@ -107,7 +118,7 @@ export default function HomePage() {
           <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">DSL Editor</span>
           <button 
             onclick={() => isModalOpen = true}
-            className="px-4 py-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-all shadow-lg shadow-blue-900/20 active:scale-95"
+            className="px-4 py-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95"
           >
             Load Sample
           </button>
@@ -125,18 +136,29 @@ export default function HomePage() {
         {/* Compiled Result */}
         <div className="p-8 border-b border-[#27272a]">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-5">Compiled Output</h2>
-          <div className="p-6 bg-[#09090b] border border-[#27272a] rounded-xl relative group shadow-inner">
-            <code className="text-blue-400 break-all font-mono text-lg font-semibold tracking-tight">
-              {compiledRegex ? `/${compiledRegex}/` : "Invalid DSL"}
-            </code>
-            <button 
-              onclick={() => navigator.clipboard.writeText(`/${compiledRegex}/`)}
-              className="absolute right-3 top-3 p-2.5 opacity-0 group-hover:opacity-100 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all text-zinc-300"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-              </svg>
-            </button>
+          <div className={`p-6 bg-[#09090b] border rounded-xl relative group shadow-inner ${compilationError ? "border-red-500/50" : "border-[#27272a]"}`}>
+            {compilationError ? (
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Validation Error</span>
+                <code className="text-red-400/80 text-xs font-mono break-words leading-relaxed">
+                  {compilationError}
+                </code>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <code className="text-blue-400 break-all font-mono text-lg font-semibold tracking-tight">
+                  {compiledRegex}
+                </code>
+                <button 
+                  onclick={() => navigator.clipboard.writeText(compiledRegex)}
+                  className="absolute right-3 top-3 p-2.5 opacity-0 group-hover:opacity-100 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all text-zinc-300"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
