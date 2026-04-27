@@ -1,3 +1,5 @@
+import ReferenceGuide from "../components/ReferenceGuide";
+
 export default function RootLayout({ children }) {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#09090b]">
@@ -11,6 +13,9 @@ export default function RootLayout({ children }) {
           />
           <h1 className="text-2xl font-bold tracking-tight text-white">Regex Compiler</h1>
         </div>
+        <nav className="flex items-center">
+          <ReferenceGuide />
+        </nav>
       </header>
 
       {/* Main Page Slot */}
@@ -21,11 +26,11 @@ export default function RootLayout({ children }) {
       {/* Shared Footer */}
       <footer className="px-6 py-4 border-t border-[#27272a] bg-[#09090b] flex items-center justify-between text-xs font-medium tracking-wide">
         <div className="text-zinc-400">
-          © 2026 <a href="https://web.opentf.workers.dev/" target="_blank" className="text-zinc-200 hover:text-blue-400 transition-colors underline decoration-zinc-700 underline-offset-4 font-semibold">Open Tech Foundation</a>
+          © 2026 <a href="https://web.opentf.workers.dev/" target="_blank" className="text-zinc-200 hover:text-blue-400 transition-colors underline decoration-zinc-700 underline-offset-4 font-semibold cursor-pointer">Open Tech Foundation</a>
         </div>
         <div className="text-zinc-400 flex items-center gap-2">
-          <span>⚡ Built using</span> 
-          <a href="https://web.opentf.workers.dev/" target="_blank" className="text-blue-400 font-bold hover:text-blue-300 transition-colors">Web App Framework</a>
+          <span>🚀 Built using</span> 
+          <span className="text-blue-400 font-bold tracking-normal cursor-default">Web App Framework</span>
         </div>
       </footer>
     </div>
