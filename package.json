@@ -1,0 +1,17 @@
+{
+  "name": "regex-compiler",
+  "private": true,
+  "workspaces": [
+    "website",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun --filter website dev"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

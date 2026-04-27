@@ -1,0 +1,11 @@
+# Bun
+node_modules
+bun.lockb
+
+# OS
+.DS_Store
+
+# Build
+dist
+.next
+.turbo
