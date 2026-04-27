@@ -7,11 +7,12 @@
 
 ---
 
-A human-readable DSL for building, debugging, and compiling complex Regular Expressions into standard JavaScript `RegExp` objects.
+A human-readable DSL for building, debugging, and compiling complex Regular Expressions into standard `RegExp` objects.
 
 - 🎨 **Intuitive DSL**: Designed for clarity, simplicity, and ease of use.
 - ⚡ **Optimized Output**: Generates clean, high-performance regular expressions.
 - 🛡️ **Smart Wrapping**: Automatically handles non-capturing groups for safety.
+- 🌐 **Cross-Language Support**: Designed as a target-agnostic DSL for generating regex across multiple languages.
 - 📦 **Zero Dependencies**: Lightweight and focused on core functionality.
 
 ## 📦 Installation
