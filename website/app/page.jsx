@@ -107,7 +107,7 @@ export default function HomePage() {
           <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">DSL Editor</span>
           <button 
             onclick={() => isModalOpen = true}
-            className="px-4 py-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95"
+            className="px-4 py-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-all shadow-lg shadow-blue-900/20 active:scale-95"
           >
             Load Sample
           </button>
@@ -191,19 +191,17 @@ export default function HomePage() {
               onclick={() => loadExample(ex)}
               className="group flex flex-col p-6 bg-[#09090b] border border-[#27272a] hover:border-blue-500/50 rounded-xl transition-all text-left"
             >
-              <div className="flex justify-between items-start mb-3">
-                <h4 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">{ex.title}</h4>
-                <div className="flex gap-2">
-                  {ex.features.map(feat => (
-                    <span className="px-2.5 py-1 rounded-full bg-zinc-800 text-[10px] font-bold text-zinc-300 uppercase tracking-tight">
-                      {feat}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <p className="text-base text-zinc-400 line-clamp-2 leading-relaxed">
+              <h4 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors mb-2">{ex.title}</h4>
+              <p className="text-base text-zinc-400 line-clamp-2 leading-relaxed mb-4">
                 {ex.description}
               </p>
+              <div className="flex flex-wrap gap-2">
+                {ex.features.map(feat => (
+                  <span className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-400 uppercase tracking-tight">
+                    {feat}
+                  </span>
+                ))}
+              </div>
             </button>
           ))}
         </div>

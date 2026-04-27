@@ -24,8 +24,8 @@ export default function RootLayout({ children }) {
           © 2026 <a href="https://web.opentf.workers.dev/" target="_blank" className="text-zinc-200 hover:text-blue-400 transition-colors underline decoration-zinc-700 underline-offset-4 font-semibold">Open Tech Foundation</a>
         </div>
         <div className="text-zinc-400 flex items-center gap-2">
-          <span>🚀 Built using</span> 
-          <span className="text-blue-400 font-bold tracking-normal">Web App Framework</span>
+          <span>⚡ Built using</span> 
+          <a href="https://web.opentf.workers.dev/" target="_blank" className="text-blue-400 font-bold hover:text-blue-300 transition-colors">Web App Framework</a>
         </div>
       </footer>
     </div>
