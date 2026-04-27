@@ -1,7 +1,7 @@
 import { expect, test, describe } from "bun:test";
 import { compileToJS } from "../src/compiler";
 
-describe("Regex Compiler - Standard Support", () => {
+describe("Regex Compiler - Basic Support", () => {
   test("Basic Literals and Escaping", () => {
     const dsl = { nodes: [{ literal: "hello.world" }] };
     const result = compileToJS(dsl) as any;
@@ -40,7 +40,9 @@ describe("Regex Compiler - Standard Support", () => {
     const result = compileToJS(dsl) as any;
     expect(result.pattern).toBe(".*?end");
   });
+});
 
+describe("Regex Compiler - Advanced Support", () => {
   test("Unicode Properties", () => {
     const dsl = { 
       nodes: [
@@ -76,14 +78,99 @@ describe("Regex Compiler - Standard Support", () => {
     const result = compileToJS(dsl) as any;
     expect(result.pattern).toBe("(?<quote>['\"]).*\\k<quote>");
   });
+
+  test("Character Set Subtraction (v flag)", () => {
+    const dsl = {
+      nodes: [
+        { 
+          charSet: { 
+            subtraction: {
+              left: { chars: "A-Z" },
+              right: { chars: "AEIOU" }
+            }
+          } 
+        }
+      ],
+      flags: { unicodeSets: true }
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("[[A-Z]--[AEIOU]]");
+    expect(result.flags).toBe("v");
+  });
+
+  test("Character Set Intersection (v flag)", () => {
+    const dsl = {
+      nodes: [
+        { 
+          charSet: { 
+            intersection: [
+              { chars: "a-z" },
+              { chars: "p-z" }
+            ]
+          } 
+        }
+      ],
+      flags: { unicodeSets: true }
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("[[a-z]&&[p-z]]");
+    expect(result.flags).toBe("v");
+  });
+
+  test("Hex and Unicode Escapes", () => {
+    const dsl = {
+      nodes: [
+        { hex: "41" }, 
+        { unicode: "0042" },
+        { unicode: "1F600" } 
+      ]
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("\\x41\\u0042\\u{1F600}");
+  });
 });
 
-describe("Regex Compiler - Edge Cases & Validation", () => {
+describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
   test("Invalid DSL - Unrecognized Node", () => {
     const dsl = { nodes: [{ unknownNode: true }] };
     const result = compileToJS(dsl) as any;
     expect(result.error).toBeDefined();
     expect(result.error).toContain("nodes.0: Invalid input");
+  });
+
+  test("count: 0 should generate {0}", () => {
+    const dsl = {
+      nodes: [
+        { repeat: { type: "digit", count: 0 } }
+      ]
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("\\d{0}");
+  });
+
+  test("nested repeats should be wrapped in non-capturing groups", () => {
+    const dsl = {
+      nodes: [
+        { 
+          repeat: { 
+            type: { repeat: { type: "digit", count: 3 } }, 
+            oneOrMore: true 
+          } 
+        }
+      ]
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("(?:\\d{3})+");
+  });
+
+  test("multi-character literals in repeat should be wrapped", () => {
+    const dsl = {
+      nodes: [
+        { repeat: { type: { literal: "abc" }, zeroOrMore: true } }
+      ]
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("(?:abc)*");
   });
 
   test("Complex Nested Choice and Repeats", () => {

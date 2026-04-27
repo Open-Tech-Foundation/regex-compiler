@@ -5,6 +5,17 @@ function escapeLiteral(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function isAtomic(pattern: string): boolean {
+  if (pattern.length <= 1) return true;
+  if (pattern.startsWith("[") && pattern.endsWith("]")) return true;
+  if (pattern.startsWith("(") && pattern.endsWith(")")) return true;
+  if (pattern.startsWith("\\")) {
+    if (pattern.length === 2) return true;
+    if (/^\\(x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|u\{[0-9a-fA-F]+\}|p\{.*\}|P\{.*\})$/.test(pattern)) return true;
+  }
+  return false;
+}
+
 function mapCharClass(type: CharClassType): string {
   switch (type) {
     case "digit": return "\\d";
@@ -149,17 +160,20 @@ function compileNode(node: RegexNode): string {
       base = Array.isArray(type)
         ? type.map(compileNode).join("")
         : compileNode(type as RegexNode);
+    }
       
-      if (base.length > 1 && !base.startsWith("(") && !base.startsWith("\\")) {
-        base = `(?:${base})`;
-      }
+    if (!isAtomic(base)) {
+      base = `(?:${base})`;
     }
 
     let quantifier = "";
     if (optional) quantifier = "?";
     else if (oneOrMore) quantifier = "+";
     else if (zeroOrMore) quantifier = "*";
-    else if (count !== undefined && count > 1) quantifier = `{${count}}`;
+    else if (count !== undefined) {
+      if (count === 0) quantifier = "{0}";
+      else if (count > 1) quantifier = `{${count}}`;
+    }
     else if (min !== undefined && max !== undefined) quantifier = `{${min},${max}}`;
     else if (min !== undefined) quantifier = `{${min},}`;
 

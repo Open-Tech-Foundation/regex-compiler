@@ -133,6 +133,7 @@ export default function HomePage() {
   const dslText = $state(JSON.stringify(EXAMPLE_REGISTRY[0].dsl, null, 2));
   const manualTestString = $state("");
   const isLibraryOpen = $state(false);
+  const isCopied = $state(false);
 
   const compilationResult = $derived(() => {
     try {
@@ -167,6 +168,13 @@ export default function HomePage() {
     dslText = JSON.stringify(example.dsl, null, 2);
     manualTestString = example.testCases[0].input;
     isLibraryOpen = false;
+  };
+
+  const copyToClipboard = () => {
+    if (!compiledRegex) return;
+    navigator.clipboard.writeText(compiledRegex);
+    isCopied = true;
+    setTimeout(() => isCopied = false, 2000);
   };
 
   return (
@@ -212,12 +220,16 @@ export default function HomePage() {
               <div className="flex flex-col gap-2">
                 <code className="text-blue-400 break-all font-mono text-lg font-semibold tracking-tight cursor-text">{compiledRegex}</code>
                 <button 
-                  onclick={() => navigator.clipboard.writeText(compiledRegex)}
-                  className="absolute right-3 top-3 p-2.5 opacity-0 group-hover:opacity-100 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all text-zinc-300 cursor-pointer"
+                  onclick={copyToClipboard}
+                  className={`absolute right-3 top-3 p-2 rounded-lg transition-all flex items-center gap-2 ${isCopied ? "bg-green-500/20 text-green-400" : "opacity-0 group-hover:opacity-100 bg-zinc-800 hover:bg-zinc-700 text-zinc-300"} cursor-pointer`}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                  </svg>
+                  {isCopied ? (
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Copied!</span>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                  )}
                 </button>
               </div>
             )}
@@ -294,14 +306,15 @@ export default function HomePage() {
         <div className="grid grid-cols-1 gap-4">
           {EXAMPLE_REGISTRY.map(ex => (
             <button 
+              key={ex.id}
               onclick={() => loadExample(ex)}
               className="group flex flex-col p-6 bg-[#09090b] border border-[#27272a] hover:border-blue-500/50 rounded-xl transition-all text-left cursor-pointer"
             >
               <h4 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors mb-2">{ex.title}</h4>
               <p className="text-base text-zinc-400 line-clamp-2 leading-relaxed mb-4">{ex.description}</p>
               <div className="flex flex-wrap gap-2">
-                {ex.features.map(feat => (
-                  <span className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-400 uppercase tracking-tight">{feat}</span>
+                {ex.features.map((feat, fIdx) => (
+                  <span key={fIdx} className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-400 uppercase tracking-tight">{feat}</span>
                 ))}
               </div>
             </button>
