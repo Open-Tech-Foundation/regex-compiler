@@ -20,7 +20,13 @@ const EXAMPLE_REGISTRY = [
       ],
       flags: { global: true }
     },
-    testCase: "123-456-7890"
+    testCases: [
+      { input: "123-456-7890", expected: true },
+      { input: "987-654-3210", expected: true },
+      { input: "123-45-6789", expected: false },
+      { input: "abc-def-ghij", expected: false },
+      { input: "1234567890", expected: false }
+    ]
   },
   {
     id: "email",
@@ -39,7 +45,13 @@ const EXAMPLE_REGISTRY = [
       ],
       flags: { ignoreCase: true }
     },
-    testCase: "hello.world@opentf.org"
+    testCases: [
+      { input: "hello@opentf.org", expected: true },
+      { input: "user.name+tag@domain.com", expected: true },
+      { input: "invalid-email", expected: false },
+      { input: "@missing-user.com", expected: false },
+      { input: "user@domain..com", expected: false }
+    ]
   },
   {
     id: "password",
@@ -55,7 +67,13 @@ const EXAMPLE_REGISTRY = [
         { endOfLine: true }
       ]
     },
-    testCase: "Password123"
+    testCases: [
+      { input: "Password123", expected: true },
+      { input: "abc12345", expected: true },
+      { input: "short1", expected: false },
+      { input: "NoDigitsHere", expected: false },
+      { input: "12345678", expected: false }
+    ]
   },
   {
     id: "html",
@@ -74,45 +92,13 @@ const EXAMPLE_REGISTRY = [
       ],
       flags: { global: true }
     },
-    testCase: "<div>Hello World</div>"
-  },
-  {
-    id: "word",
-    title: "Whole Word Search",
-    description: "Finds a specific word only if it's not part of another word.",
-    features: ["Word Boundaries"],
-    dsl: {
-      nodes: [
-        { wordBoundary: true },
-        { literal: "OpenTF" },
-        { wordBoundary: true }
-      ]
-    },
-    testCase: "Welcome to OpenTF foundation"
-  },
-  {
-    id: "csv",
-    title: "CSV Column Parser",
-    description: "Matches a column in a CSV, optionally enclosed in quotes.",
-    features: ["Choice", "Non-capturing Groups"],
-    dsl: {
-      nodes: [
-        {
-          choice: [
-            [
-              { literal: "\"" },
-              { capture: { name: "quoted", pattern: [{ repeat: { type: { charSet: { chars: "\"", exclude: true } }, zeroOrMore: true } }] } },
-              { literal: "\"" }
-            ],
-            [
-              { capture: { name: "unquoted", pattern: [{ repeat: { type: { charSet: { chars: ",", exclude: true } }, zeroOrMore: true } }] } }
-            ]
-          ]
-        }
-      ],
-      flags: { global: true }
-    },
-    testCase: "\"John Doe\",30,New York"
+    testCases: [
+      { input: "<div>content</div>", expected: true },
+      { input: "<span>test</span>", expected: true },
+      { input: "<div>mismatch</span>", expected: false },
+      { input: "<>empty</>", expected: false },
+      { input: "not a tag", expected: false }
+    ]
   },
   {
     id: "es2024",
@@ -132,13 +118,20 @@ const EXAMPLE_REGISTRY = [
       ],
       flags: { global: true, unicodeSets: true }
     },
-    testCase: "ABCDEFGHIJKL"
+    testCases: [
+      { input: "B", expected: true },
+      { input: "C", expected: true },
+      { input: "A", expected: false },
+      { input: "E", expected: false },
+      { input: "1", expected: false }
+    ]
   }
 ];
 
 export default function HomePage() {
+  const selectedExample = $state(EXAMPLE_REGISTRY[0]);
   const dslText = $state(JSON.stringify(EXAMPLE_REGISTRY[0].dsl, null, 2));
-  const testString = $state(EXAMPLE_REGISTRY[0].testCase);
+  const manualTestString = $state("");
   const isLibraryOpen = $state(false);
 
   const compilationResult = $derived(() => {
@@ -157,27 +150,22 @@ export default function HomePage() {
     return null;
   });
 
-  const matchData = $derived(() => {
-    if (!compilationResult || compilationResult.error) return null;
+  const checkMatch = (input) => {
+    if (!compilationResult || compilationResult.error) return false;
     try {
       const re = new RegExp(compilationResult.pattern, compilationResult.flags);
-      const match = testString.match(re);
-      return match;
+      return re.test(input);
     } catch (e) {
-      return null;
+      return false;
     }
-  });
+  };
 
-  const isMatch = $derived(() => !!matchData);
-
-  const captureGroups = $derived(() => {
-    if (!matchData || !matchData.groups) return [];
-    return Object.entries(matchData.groups);
-  });
+  const manualMatch = $derived(() => checkMatch(manualTestString));
 
   const loadExample = (example) => {
+    selectedExample = example;
     dslText = JSON.stringify(example.dsl, null, 2);
-    testString = example.testCase;
+    manualTestString = example.testCases[0].input;
     isLibraryOpen = false;
   };
 
@@ -189,7 +177,7 @@ export default function HomePage() {
           <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">DSL Editor</span>
           <button 
             onclick={() => isLibraryOpen = true}
-            className="px-4 py-1.5 text-[11px] font-bold bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg transition-all active:scale-95 cursor-pointer border border-zinc-700/50"
+            className="px-4 py-1.5 text-[10px] font-bold bg-[#09090b] border border-blue-500/30 hover:border-blue-500 hover:bg-blue-500/5 text-blue-400/90 hover:text-blue-400 rounded-lg uppercase tracking-[0.15em] transition-all active:scale-95 cursor-pointer shadow-sm shadow-blue-900/10"
           >
             Samples
           </button>
@@ -203,7 +191,7 @@ export default function HomePage() {
       </div>
 
       {/* Right: Preview & Test */}
-      <div className="w-[480px] flex flex-col bg-[#0c0c0e]">
+      <div className="w-[520px] flex flex-col bg-[#0c0c0e]">
         {/* Compiled Result */}
         <div className="p-8 border-b border-[#27272a]">
           <div className="flex items-center justify-between mb-6">
@@ -237,41 +225,62 @@ export default function HomePage() {
         </div>
 
         {/* Test Bench */}
-        <div className="p-8 flex-1 overflow-y-auto">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-6">Test Bench</h2>
-          <div className="space-y-8">
-            <div>
-              <label className="block text-sm font-bold text-zinc-400 uppercase tracking-widest mb-3">Input String</label>
+        <div className="p-8 flex-1 overflow-y-auto space-y-10">
+          {/* Manual Test */}
+          <section>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-6">Manual Test Bench</h2>
+            <div className="space-y-4">
               <input
                 type="text"
-                value={testString}
-                oninput={(e) => testString = e.target.value}
+                value={manualTestString}
+                oninput={(e) => manualTestString = e.target.value}
                 className="w-full bg-[#09090b] border border-[#27272a] focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 rounded-xl px-6 py-4 text-white outline-none transition-all font-mono text-base cursor-text"
-                placeholder="Enter text to test..."
+                placeholder="Enter custom text to test..."
               />
+              <div className={`flex items-center gap-4 p-5 rounded-xl border transition-all ${manualMatch ? "bg-green-500/5 border-green-500/30" : "bg-red-500/5 border-red-500/30"}`}>
+                <div className={`w-3.5 h-3.5 rounded-full ${manualMatch ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`}></div>
+                <span className={`text-sm font-black uppercase tracking-[0.2em] ${manualMatch ? "text-green-500" : "text-red-500"}`}>
+                  {manualMatch ? "MATCH" : "NO MATCH"}
+                </span>
+              </div>
             </div>
+          </section>
 
-            <div className={`flex items-center gap-4 p-6 rounded-xl border transition-all ${isMatch ? "bg-green-500/5 border-green-500/30" : "bg-red-500/5 border-red-500/30"}`}>
-              <div className={`w-4 h-4 rounded-full ${isMatch ? "bg-green-500 shadow-[0_0_12px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.6)]"}`}></div>
-              <span className={`text-base font-black uppercase tracking-[0.2em] ${isMatch ? "text-green-500" : "text-red-500"}`}>
-                {isMatch ? "MATCH" : "NO MATCH"}
+          {/* Predefined Suite */}
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Predefined Test Suite</h2>
+              <span className="text-[11px] font-black text-zinc-300 uppercase tracking-widest bg-zinc-800/80 px-3 py-1 rounded-lg border border-zinc-700/50">
+                {selectedExample.testCases.filter(c => checkMatch(c.input) === c.expected).length} / {selectedExample.testCases.length} Passed
               </span>
             </div>
-
-            {captureGroups.length > 0 && (
-              <div className="mt-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-5">Extracted Data</h3>
-                <div className="space-y-4">
-                  {captureGroups.map(([name, value]) => (
-                    <div className="flex flex-col gap-2 p-5 bg-[#09090b] border border-[#27272a] rounded-xl hover:border-blue-500/30 transition-colors shadow-sm cursor-default">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-500">{name}</span>
-                      <span className="text-base text-blue-400 font-mono font-semibold truncate cursor-text">{value}</span>
+            <div className="space-y-3">
+              {selectedExample.testCases.map((tc, idx) => {
+                const isMatch = checkMatch(tc.input);
+                const isCorrect = isMatch === tc.expected;
+                return (
+                  <div key={idx} className={`flex items-center justify-between p-4 bg-[#09090b] border rounded-xl transition-all group ${isCorrect ? "border-[#27272a] hover:border-zinc-700" : "border-red-500/40 bg-red-500/[0.03]"}`}>
+                    <div className="flex flex-col gap-1 overflow-hidden mr-4">
+                      <div className="flex items-center gap-2">
+                        {isCorrect ? (
+                          <span className="text-green-500 text-xs font-bold">✓</span>
+                        ) : (
+                          <span className="text-red-500 text-xs font-bold">✗</span>
+                        )}
+                        <code className="text-sm text-white font-mono truncate">{tc.input || <span className="italic text-zinc-500">empty string</span>}</code>
+                      </div>
+                      <span className={`text-[10px] font-bold uppercase tracking-tight pl-5 ${tc.expected ? "text-green-500/80" : "text-red-500/80"}`}>
+                        {tc.expected ? "Expected: Match" : "Expected: Fail"}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+                    <div className={`shrink-0 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${isMatch ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
+                      {isMatch ? "Matched" : "Failed"}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         </div>
       </div>
 
