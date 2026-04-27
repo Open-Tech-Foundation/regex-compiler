@@ -32,9 +32,17 @@ export default function Editor({ value, onChange }) {
     }
   });
 
+  // Keep the editor in sync with the prop
+  $effect(() => {
+    console.log("value", value);
+    if (editor && value !== editor.getValue()) {
+      editor.setValue(value);
+    }
+  });
+
   return (
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       style="width: 100%; height: 100%; border-radius: 0.5rem; overflow: hidden;"
     />
   );
