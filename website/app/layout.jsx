@@ -1,7 +1,7 @@
 export default function RootLayout({ children }) {
   return (
-    <div style="max-width: 600px; margin: 0 auto; padding: 2rem; text-align: center;">
-      <main>
+    <div className="h-screen w-full">
+      <main className="h-full w-full">
         {children}
       </main>
     </div>

@@ -9,14 +9,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@opentf/web": "^0.3.0"
+    "@opentf/regex-compiler": "workspace:*",
+    "@opentf/web": "^0.3.0",
+    "lucide-static": "^1.11.0",
+    "monaco-editor": "^0.55.1"
   },
   "devDependencies": {
-    "@babel/plugin-syntax-jsx": "^7.28.6",
-    "vite": "^8.0.8",
-    "@rollup/plugin-babel": "^7.0.0",
     "@babel/core": "^7.29.0",
+    "@babel/plugin-syntax-jsx": "^7.28.6",
+    "@babel/preset-typescript": "^7.28.5",
+    "@rollup/plugin-babel": "^7.0.0",
+    "@tailwindcss/vite": "^4.2.2",
     "tailwindcss": "^4.2.2",
-    "@tailwindcss/vite": "^4.2.2"
+    "vite": "^8.0.8"
   }
 }

@@ -21,6 +21,9 @@ export default defineConfig({
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
         exclude: 'node_modules/**',
         configFile: false,
+        presets: [
+          ["@babel/preset-typescript", { isTSX: true, allExtensions: true }]
+        ],
         plugins: [
           "@babel/plugin-syntax-jsx",
           ["@opentf/web/compiler"]
