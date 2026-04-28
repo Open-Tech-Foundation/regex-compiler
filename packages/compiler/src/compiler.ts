@@ -7,12 +7,29 @@ function escapeLiteral(str: string): string {
 
 function isAtomic(pattern: string): boolean {
   if (pattern.length <= 1) return true;
-  if (pattern.startsWith("[") && pattern.endsWith("]")) return true;
-  if (pattern.startsWith("(") && pattern.endsWith(")")) return true;
   if (pattern.startsWith("\\")) {
     if (pattern.length === 2) return true;
     if (/^\\(x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|u\{[0-9a-fA-F]+\}|p\{.*\}|P\{.*\})$/.test(pattern)) return true;
   }
+
+  // Balanced bracket/parenthesis check
+  const opener = pattern[0];
+  const closer = opener === "[" ? "]" : opener === "(" ? ")" : null;
+
+  if (closer && pattern.endsWith(closer)) {
+    let depth = 0;
+    for (let i = 0; i < pattern.length; i++) {
+      const char = pattern[i];
+      const isEscaped = i > 0 && pattern[i - 1] === "\\";
+      if (!isEscaped) {
+        if (char === opener) depth++;
+        if (char === closer) depth--;
+      }
+      if (depth === 0 && i < pattern.length - 1) return false;
+    }
+    return depth === 0;
+  }
+
   return false;
 }
 

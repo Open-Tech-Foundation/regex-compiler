@@ -8,7 +8,7 @@ export const EXAMPLE_REGISTRY = [
       nodes: [
         { startOfLine: true },
         { literal: "+" },
-        { repeat: { type: "digit", count: 1 } },
+        { repeat: { type: "digit", min: 1, max: 3 } },
         { literal: " " },
         { repeat: { type: "digit", count: 3 } },
         { literal: " " },

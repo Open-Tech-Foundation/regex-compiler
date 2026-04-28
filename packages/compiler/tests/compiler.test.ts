@@ -210,4 +210,36 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
     const result = compileToJS(dsl) as any;
     expect(result.pattern).toBe("(?:a|\\d{2})?");
   });
+
+  test("concatenated groups in repeat should be wrapped", () => {
+    const dsl = {
+      nodes: [{
+        repeat: {
+          type: [
+            { capture: { pattern: [{ literal: "a" }] } },
+            { capture: { pattern: [{ literal: "b" }] } }
+          ],
+          oneOrMore: true
+        }
+      }]
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("(?:(a)(b))+");
+  });
+
+  test("concatenated character sets in repeat should be wrapped", () => {
+    const dsl = {
+      nodes: [{
+        repeat: {
+          type: [
+            { charSet: { chars: "a" } },
+            { charSet: { chars: "b" } }
+          ],
+          zeroOrMore: true
+        }
+      }]
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.pattern).toBe("(?:[a][b])*");
+  });
 });
