@@ -157,6 +157,71 @@ export default function ReferenceGuide() {
                         {activeItem.description}
                       </p>
                     </div>
+
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Live Preview</label>
+                      <div className="bg-[#09090b] border border-zinc-800 rounded-2xl p-8 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4">
+                          <span className="px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-400">
+                            {(() => {
+                              try {
+                                const re = new RegExp(activeItem.regex, 'g');
+                                const count = (activeItem.testString.match(re) || []).length;
+                                return `${count} match${count === 1 ? '' : 'es'}`;
+                              } catch(e) { return '0 matches'; }
+                            })()}
+                          </span>
+                        </div>
+                        <div className="text-xl leading-relaxed font-medium text-zinc-400 whitespace-pre-wrap break-all">
+                          {(() => {
+                            const text = activeItem.testString;
+                            const regexStr = activeItem.regex;
+                            if (!regexStr || !text) return text;
+                            try {
+                              const re = new RegExp(regexStr, 'g');
+                              const parts = [];
+                              let lastIndex = 0;
+                              let match;
+                              
+                              while ((match = re.exec(text)) !== null) {
+                                if (match.index > lastIndex) {
+                                  parts.push(text.substring(lastIndex, match.index));
+                                }
+                                parts.push(<mark className="bg-blue-500/30 text-blue-200 rounded px-0.5 border-b-2 border-blue-500/50">{match[0]}</mark>);
+                                lastIndex = re.lastIndex;
+                                if (re.lastIndex === match.index) re.lastIndex++; 
+                              }
+                              
+                              if (lastIndex < text.length) {
+                                parts.push(text.substring(lastIndex));
+                              }
+                              
+                              return parts;
+                            } catch (e) {
+                              return text;
+                            }
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Detailed Breakdown</label>
+                      <div className="space-y-3">
+                        {activeItem.details.map((detail, dIdx) => (
+                          <div key={dIdx} className="flex items-start gap-4 p-4 bg-[#09090b] border border-zinc-800 rounded-xl group/detail hover:border-zinc-700 transition-colors">
+                            <code className="shrink-0 px-2 py-1 rounded bg-blue-500/10 text-blue-400 font-mono font-bold text-sm">
+                              {detail.part}
+                            </code>
+                            <div className="flex-1 pt-1">
+                              <p className="text-sm text-zinc-300 font-medium group-hover/detail:text-white transition-colors">
+                                {detail.meaning}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : (

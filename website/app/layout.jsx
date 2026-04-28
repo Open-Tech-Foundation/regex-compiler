@@ -6,9 +6,9 @@ export default function RootLayout({ children }) {
       {/* Shared Header */}
       <header className="flex items-center justify-between px-6 h-14 border-b border-[#27272a] bg-[#09090b] z-10 shrink-0">
         <div className="flex items-center gap-3">
-          <img 
-            src="https://raw.githubusercontent.com/Open-Tech-Foundation/website/main/static/img/Logo.svg" 
-            alt="OpenTF Logo" 
+          <img
+            src="https://raw.githubusercontent.com/Open-Tech-Foundation/website/main/static/img/Logo.svg"
+            alt="OpenTF Logo"
             className="w-8 h-8 object-contain"
           />
           <h1 className="text-xl font-bold tracking-tight text-white">Regex DSL Compiler</h1>
@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
           © 2026 <a href="https://web.opentf.workers.dev/" target="_blank" className="text-zinc-200 hover:text-blue-400 transition-colors underline decoration-zinc-700 underline-offset-4 font-semibold cursor-pointer">Open Tech Foundation</a>
         </div>
         <div className="text-zinc-400 flex items-center gap-2">
-          <span>🚀 Built using</span> 
+          <span>⚡ Built with</span>
           <a href="https://web.opentf.workers.dev/" target="_blank" className="text-blue-400 font-bold tracking-normal hover:text-blue-300 transition-colors cursor-pointer">Web App Framework</a>
         </div>
       </footer>
