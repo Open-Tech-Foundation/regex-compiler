@@ -68,12 +68,12 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
     z.object({
       capture: z.object({
         name: z.string().min(1).optional(),
-        pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema).min(1)]),
+        pattern: z.array(RegexNodeSchema).min(1),
       }),
     }),
     z.object({
       group: z.object({
-        pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema).min(1)]),
+        pattern: z.array(RegexNodeSchema).min(1),
       }),
     }),
     z.object({ $: z.enum(['start', 'end', 'boundary', 'notBoundary']) }),
@@ -85,7 +85,7 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
           'positiveLookbehind',
           'negativeLookbehind',
         ]),
-        pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema).min(1)]),
+        pattern: z.array(RegexNodeSchema).min(1),
       }),
     }),
     z.object({ backreference: z.union([z.string(), z.number()]) }),

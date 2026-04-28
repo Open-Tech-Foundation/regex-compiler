@@ -30,40 +30,35 @@ export const EXAMPLE_REGISTRY = [
     description: 'A robust pattern for validating common email address formats.',
     features: ['Character Sets', 'Quantifiers'],
     dsl: [
-      { $: 'start' },
+      { "$": "start" },
       {
-        capture: {
-          name: 'user',
-          pattern: {
-            repeat: { charSet: { chars: 'a-zA-Z0-9._%+-', exclude: false } },
-            oneOrMore: true,
-          },
-        },
+        "capture": {
+          "name": "user",
+          "pattern": [
+            { "repeat": { "charSet": { "chars": "a-zA-Z0-9._%+-" } }, "oneOrMore": true }
+          ]
+        }
       },
-      '@',
+      "@",
       {
-        capture: {
-          name: 'domain',
-          pattern: {
-            repeat: { charSet: { chars: 'a-zA-Z0-9-', exclude: false } },
-            oneOrMore: true,
-          },
-        },
+        "capture": {
+          "name": "domain",
+          "pattern": [
+            { "repeat": { "charSet": { "chars": "a-zA-Z0-9-" } }, "oneOrMore": true }
+          ]
+        }
       },
+      ".",
       {
-        repeat: [
-          '.',
-          {
-            capture: {
-              name: 'tld',
-              pattern: { repeat: { charSet: { chars: 'a-zA-Z', exclude: false } }, min: 2 },
-            },
-          },
-        ],
-        count: 1,
+        "capture": {
+          "name": "tld",
+          "pattern": [
+            { "repeat": { "charSet": { "chars": "a-zA-Z" } }, "min": 2 }
+          ]
+        }
       },
-      { $: 'end' },
-      { flags: { ignoreCase: true } },
+      { "$": "end" },
+      { "flags": { "ignoreCase": true } }
     ],
     testCases: [
       { input: 'hello@opentf.org', expected: true },
@@ -115,12 +110,12 @@ export const EXAMPLE_REGISTRY = [
     features: ['Backreferences', 'Named Groups'],
     dsl: [
       '<',
-      { capture: { name: 'tag', pattern: { repeat: { type: 'word' }, oneOrMore: true } } },
+      { capture: { name: 'tag', pattern: [{ repeat: { type: 'word' }, oneOrMore: true }] } },
       '>',
       {
         capture: {
           name: 'content',
-          pattern: { repeat: { type: 'any' }, zeroOrMore: true, lazy: true },
+          pattern: [{ repeat: { type: 'any' }, zeroOrMore: true, lazy: true }],
         },
       },
       '</',

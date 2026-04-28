@@ -150,12 +150,12 @@ describe('Regex Compiler - Additional Edge Cases', () => {
 
     describe('Groups', () => {
         test('non-capturing group compiles to (?:...)', () => {
-            const result = compileToJS([{ group: { pattern: 'abc' } }]) as any;
+            const result = compileToJS([{ group: { pattern: ['abc'] } }]) as any;
             expect(result.pattern).toBe('(?:abc)');
         });
 
         test('unnamed capture compiles to (...)', () => {
-            const result = compileToJS([{ capture: { pattern: 'abc' } }]) as any;
+            const result = compileToJS([{ capture: { pattern: ['abc'] } }]) as any;
             expect(result.pattern).toBe('(abc)');
         });
 
@@ -205,7 +205,7 @@ describe('Regex Compiler - Additional Edge Cases', () => {
 
         test('lookahead pattern can itself contain a capture group', () => {
             const result = compileToJS([
-                { lookaround: { type: 'positiveLookahead', pattern: [{ capture: { pattern: 'foo' } }] } },
+                { lookaround: { type: 'positiveLookahead', pattern: [{ capture: { pattern: ['foo'] } }] } },
             ]) as any;
             expect(result.pattern).toBe('(?=(foo))');
         });

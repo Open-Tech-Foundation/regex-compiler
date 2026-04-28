@@ -43,7 +43,7 @@ Explore the library's capabilities with the new **Fluent DSL**:
 import { compileToJS } from "@opentf/regex-compiler";
 
 const dsl = [
-  { capture: { name: "user", pattern: { repeat: { type: "word" }, oneOrMore: true } } }
+  { capture: { name: "user", pattern: [{ repeat: { type: "word" }, oneOrMore: true }] } }
 ];
 
 const { pattern } = compileToJS(dsl); 
@@ -78,27 +78,31 @@ The ultimate "Zero-Wrapper" experience:
   {
     "capture": {
       "name": "user",
-      "pattern": {
-        "repeat": { "charSet": { "chars": "a-z0-9._%+-", "exclude": false } },
-        "oneOrMore": true
-      }
+      "pattern": [
+        {
+          "repeat": { "charSet": { "chars": "a-z0-9._%+-", "exclude": false } },
+          "oneOrMore": true
+        }
+      ]
     }
   },
   "@",
   {
     "capture": {
       "name": "domain",
-      "pattern": {
-        "repeat": { "charSet": { "chars": "a-z0-9-", "exclude": false } },
-        "oneOrMore": true
-      }
+      "pattern": [
+        {
+          "repeat": { "charSet": { "chars": "a-z0-9-", "exclude": false } },
+          "oneOrMore": true
+        }
+      ]
     }
   },
   ".",
   {
     "capture": {
       "name": "tld",
-      "pattern": { "repeat": { "charSet": { "chars": "a-z", "exclude": false } }, "min": 2 }
+      "pattern": [{ "repeat": { "charSet": { "chars": "a-z", "exclude": false } }, "min": 2 }]
     }
   },
   { "$": "end" },

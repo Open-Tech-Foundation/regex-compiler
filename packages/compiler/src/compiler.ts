@@ -167,11 +167,7 @@ function compileNodeInternal(node: any, path: string, ctx: CompileContext): void
   if ('capture' in node) {
     const { name, pattern } = node.capture;
     ctx.pattern += name ? `(?<${name}>` : '(';
-    if (Array.isArray(pattern)) {
-      pattern.forEach((item, i) => compileNodeInternal(item, `${path}.capture.pattern.${i}`, ctx));
-    } else {
-      compileNodeInternal(pattern, `${path}.capture.pattern`, ctx);
-    }
+    pattern.forEach((item: any, i: number) => compileNodeInternal(item, `${path}.capture.pattern.${i}`, ctx));
     ctx.pattern += ')';
     ctx.mappings.push({ path, start, end: ctx.pattern.length });
     return;
@@ -180,11 +176,7 @@ function compileNodeInternal(node: any, path: string, ctx: CompileContext): void
   if ('group' in node) {
     const { pattern } = node.group;
     ctx.pattern += '(?:';
-    if (Array.isArray(pattern)) {
-      pattern.forEach((item, i) => compileNodeInternal(item, `${path}.group.pattern.${i}`, ctx));
-    } else {
-      compileNodeInternal(pattern, `${path}.group.pattern`, ctx);
-    }
+    pattern.forEach((item: any, i: number) => compileNodeInternal(item, `${path}.group.pattern.${i}`, ctx));
     ctx.pattern += ')';
     ctx.mappings.push({ path, start, end: ctx.pattern.length });
     return;
@@ -206,13 +198,9 @@ function compileNodeInternal(node: any, path: string, ctx: CompileContext): void
         ctx.pattern += '(?<!';
         break;
     }
-    if (Array.isArray(pattern)) {
-      pattern.forEach((item, i) =>
-        compileNodeInternal(item, `${path}.lookaround.pattern.${i}`, ctx),
-      );
-    } else {
-      compileNodeInternal(pattern, `${path}.lookaround.pattern`, ctx);
-    }
+    pattern.forEach((item: any, i: number) =>
+      compileNodeInternal(item, `${path}.lookaround.pattern.${i}`, ctx),
+    );
     ctx.pattern += ')';
     ctx.mappings.push({ path, start, end: ctx.pattern.length });
     return;
@@ -484,14 +472,14 @@ export function validateDSL(input: any): ValidationResult {
         if (typeof node === 'object') {
           if (node.capture)
             walk(
-              Array.isArray(node.capture.pattern) ? node.capture.pattern : [node.capture.pattern],
+              node.capture.pattern,
               `${currentPath}.capture.pattern`,
               pass,
               context,
             );
           if (node.group)
             walk(
-              Array.isArray(node.group.pattern) ? node.group.pattern : [node.group.pattern],
+              node.group.pattern,
               `${currentPath}.group.pattern`,
               pass,
               context,
@@ -505,9 +493,7 @@ export function validateDSL(input: any): ValidationResult {
             );
           if (node.lookaround)
             walk(
-              Array.isArray(node.lookaround.pattern)
-                ? node.lookaround.pattern
-                : [node.lookaround.pattern],
+              node.lookaround.pattern,
               `${currentPath}.lookaround.pattern`,
               pass,
               { inLookbehind: node.lookaround.type.endsWith('Lookbehind') },

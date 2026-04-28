@@ -249,7 +249,7 @@ export const REFERENCE_DATA = [
       {
         title: 'Positive Lookahead',
         regex: '(?=pie)',
-        dsl: '{ "lookaround": { "type": "positiveLookahead", "pattern": "pie" } }',
+        dsl: '{ "lookaround": { "type": "positiveLookahead", "pattern": ["pie"] } }',
         description: 'Matches position followed by pattern.',
         testString: 'applepie',
         details: [{ part: '(?=...)', meaning: 'Positive Lookahead' }],
@@ -257,7 +257,7 @@ export const REFERENCE_DATA = [
       {
         title: 'Negative Lookahead',
         regex: '(?!pie)',
-        dsl: '{ "lookaround": { "type": "negativeLookahead", "pattern": "pie" } }',
+        dsl: '{ "lookaround": { "type": "negativeLookahead", "pattern": ["pie"] } }',
         description: 'Matches position NOT followed by pattern.',
         testString: 'applesauce',
         details: [{ part: '(?!...)', meaning: 'Negative Lookahead' }],
@@ -265,7 +265,7 @@ export const REFERENCE_DATA = [
       {
         title: 'Positive Lookbehind',
         regex: '(?<=apple)',
-        dsl: '{ "lookaround": { "type": "positiveLookbehind", "pattern": "apple" } }',
+        dsl: '{ "lookaround": { "type": "positiveLookbehind", "pattern": ["apple"] } }',
         description: 'Matches position preceded by pattern.',
         testString: 'applepie',
         details: [{ part: '(?<=...)', meaning: 'Positive Lookbehind' }],
@@ -273,7 +273,7 @@ export const REFERENCE_DATA = [
       {
         title: 'Negative Lookbehind',
         regex: '(?<!apple)',
-        dsl: '{ "lookaround": { "type": "negativeLookbehind", "pattern": "apple" } }',
+        dsl: '{ "lookaround": { "type": "negativeLookbehind", "pattern": ["apple"] } }',
         description: 'Matches position NOT preceded by pattern.',
         testString: 'cherrypie',
         details: [{ part: '(?<!...)', meaning: 'Negative Lookbehind' }],
@@ -294,7 +294,7 @@ export const REFERENCE_DATA = [
       {
         title: 'Capturing Group',
         regex: '(abc)',
-        dsl: '{ "capture": { "pattern": "abc" } }',
+        dsl: '{ "capture": { "pattern": ["abc"] } }',
         description: 'Groups pattern and creates a capture group.',
         testString: 'abcabc',
         details: [{ part: '(...)', meaning: 'Capturing group' }],
@@ -302,7 +302,7 @@ export const REFERENCE_DATA = [
       {
         title: 'Named Capturing Group',
         regex: '(?<year>\\d{4})',
-        dsl: '{ "capture": { "name": "year", "pattern": { "repeat": { "type": "digit" }, "count": 4 } } }',
+        dsl: '{ "capture": { "name": "year", "pattern": [{ "repeat": { "type": "digit" }, "count": 4 }] } }',
         description: 'Groups pattern and gives it a name.',
         testString: '2024-04-28',
         details: [{ part: '(?<name>...)', meaning: 'Named capturing group' }],
@@ -310,7 +310,7 @@ export const REFERENCE_DATA = [
       {
         title: 'Non-Capturing Group',
         regex: '(?:abc)',
-        dsl: '{ "group": { "pattern": "abc" } }',
+        dsl: '{ "group": { "pattern": ["abc"] } }',
         description: 'Groups without capturing.',
         testString: 'abcabc',
         details: [{ part: '(?:...)', meaning: 'Non-capturing group' }],
