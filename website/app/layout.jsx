@@ -11,7 +11,7 @@ export default function RootLayout({ children }) {
             alt="OpenTF Logo"
             className="w-8 h-8 object-contain"
           />
-          <h1 className="text-xl font-bold tracking-tight text-white">Regex DSL Compiler</h1>
+          <h1 className="text-xl font-bold tracking-tight text-white">Regex Workbench</h1>
         </div>
         <nav className="flex items-center">
           <ReferenceGuide />

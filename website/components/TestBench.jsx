@@ -59,7 +59,7 @@ export default function TestBench({
                 <div className="text-[10px] text-zinc-500 font-medium">
                   Expected:{' '}
                   <span className={tr.expected ? 'text-blue-400/80' : 'text-purple-400/80'}>
-                    {tr.expected ? 'Match' : 'Fail'}
+                    {tr.expected ? 'Match' : 'No Match'}
                   </span>
                 </div>
               </div>
@@ -68,7 +68,7 @@ export default function TestBench({
                 <span
                   className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${tr.isMatch ? 'text-green-400' : 'text-red-400'}`}
                 >
-                  {tr.isMatch ? 'Matched' : 'Failed'}
+                  {tr.isMatch ? 'Matched' : 'No Match'}
                 </span>
               </div>
             </div>
