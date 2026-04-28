@@ -16,7 +16,8 @@
   "devDependencies": {
     "@biomejs/biome": "latest",
     "@changesets/cli": "latest",
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "wrangler": "^4.85.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
