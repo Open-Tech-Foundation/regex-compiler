@@ -32,7 +32,7 @@ npm install @opentf/regex-compiler
 
 ## 🛠 Usage
 
-Explore the library's capabilities with this example:
+Explore the library's capabilities with the new **Fluent DSL**:
 
 ### Compiling a Named Capture Group
 
@@ -41,37 +41,93 @@ import { compileToJS } from "@opentf/regex-compiler";
 
 const dsl = {
   nodes: [
-    {
-      type: "group",
-      name: "user",
-      token: { 
-        type: "charset", 
-        value: "a-z", 
-        quantifier: "+" 
-      }
+    { 
+      capture: { 
+        name: "user", 
+        pattern: [
+          { repeat: { type: "word" }, oneOrMore: true }
+        ] 
+      } 
     }
   ]
 };
 
 const result = compileToJS(dsl); 
-//=> { pattern: "(?<user>[a-z]+)", flags: "" }
+//=> { pattern: "(?<user>\\w+)", flags: "" }
 ```
 
-## 📝 DSL Example
+## 🚀 Fluent DSL Features
+
+Our DSL is optimized for developer productivity with a "one-form, no-confusion" standard:
+
+### 1. Implicit String Literals
+Any plain string is automatically treated as an escaped literal.
+- `nodes: ["api.v1"]` ⮕ `api\.v1`
+
+### 2. The Dual-System
+- **Strings** = Literals (e.g., `"digit"` matches the word "digit").
+- **`{ type: "..." }`** = Keywords (e.g., `{ type: "digit" }` matches `\d`).
+
+### 3. Flattened Quantifiers
+No more nesting quantifiers inside a `type` key.
+```json
+{
+  "repeat": { "type": "digit" },
+  "min": 1,
+  "max": 3
+}
+```
+
+## 📝 Email Validator Example
 
 ```json
 {
   "nodes": [
-    { "type": "anchor", "value": "start" },
-    {
-      "type": "group",
-      "name": "user",
-      "token": { "type": "charset", "value": "a-zA-Z0-9._%+-", "quantifier": "+" }
+    { "startOfLine": true },
+    { 
+      "capture": { 
+        "name": "user", 
+        "pattern": [
+          { 
+            "repeat": { 
+              "charSet": { "chars": "a-z0-9._%+-", "exclude": false } 
+            }, 
+            "oneOrMore": true 
+          }
+        ] 
+      } 
     },
-    { "type": "literal", "value": "@" },
-    { "type": "anchor", "value": "end" }
+    "@",
+    { 
+      "capture": { 
+        "name": "domain", 
+        "pattern": [
+          { 
+            "repeat": { 
+              "charSet": { "chars": "a-z0-9-", "exclude": false } 
+            }, 
+            "oneOrMore": true 
+          }
+        ] 
+      } 
+    },
+    ".",
+    { 
+      "capture": { 
+        "name": "tld", 
+        "pattern": [
+          { 
+            "repeat": { 
+              "charSet": { "chars": "a-z", "exclude": false } 
+            }, 
+            "min": 2 
+          }
+        ] 
+      } 
+    },
+    { "endOfLine": true }
   ],
-  "flags": { "caseInsensitive": true }
+  "flags": { "ignoreCase": true }
 }
 ```
 

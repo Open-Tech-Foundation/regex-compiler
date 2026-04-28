@@ -3,14 +3,14 @@ import { compileToJS } from "../src/compiler";
 
 describe("Regex Compiler - Basic Support", () => {
   test("Basic Literals and Escaping", () => {
-    const dsl = { nodes: [{ literal: "hello.world" }] };
+    const dsl = { nodes: ["hello.world"] };
     const result = compileToJS(dsl) as any;
     expect(result.pattern).toBe("hello\\.world");
   });
 
   test("Character Classes and Flags", () => {
     const dsl = { 
-      nodes: [{ repeat: { type: "digit", oneOrMore: true } }],
+      nodes: [{ repeat: { type: "digit" }, oneOrMore: true }],
       flags: { global: true, ignoreCase: true }
     };
     const result = compileToJS(dsl) as any;
@@ -21,9 +21,9 @@ describe("Regex Compiler - Basic Support", () => {
   test("Inverse Classes and Special Escapes", () => {
     const dsl = { 
       nodes: [
-        { repeat: { type: "nonDigit", oneOrMore: true } },
-        { repeat: { type: "tab", count: 1 } },
-        { repeat: { type: "nonWord", zeroOrMore: true } }
+        { repeat: { type: "nonDigit" }, oneOrMore: true },
+        { repeat: { type: "tab" }, count: 1 },
+        { repeat: { type: "nonWord" }, zeroOrMore: true }
       ] 
     };
     const result = compileToJS(dsl) as any;
@@ -33,8 +33,8 @@ describe("Regex Compiler - Basic Support", () => {
   test("Lazy Quantifiers", () => {
     const dsl = { 
       nodes: [
-        { repeat: { type: "any", zeroOrMore: true, lazy: true } },
-        { literal: "end" }
+        { repeat: { type: "any" }, zeroOrMore: true, lazy: true },
+        "end"
       ] 
     };
     const result = compileToJS(dsl) as any;
@@ -56,14 +56,14 @@ describe("Regex Compiler - Advanced Support", () => {
 
   test("Named Capture Groups", () => {
     const dsl = { 
-      nodes: [{ capture: { name: "val", pattern: [{ repeat: { type: "word", oneOrMore: true } }] } }] 
+      nodes: [{ capture: { name: "val", pattern: [{ repeat: { type: "word" }, oneOrMore: true }] } }] 
     };
     const result = compileToJS(dsl) as any;
     expect(result.pattern).toBe("(?<val>\\w+)");
   });
 
   test("Lookaheads and Lookbehinds", () => {
-    const pos = { nodes: [{ lookaround: { type: "positiveLookahead", pattern: [{ literal: "foo" }] } }] };
+    const pos = { nodes: [{ lookaround: { type: "positiveLookahead", pattern: ["foo"] } }] };
     expect((compileToJS(pos) as any).pattern).toBe("(?=foo)");
   });
 
@@ -71,7 +71,7 @@ describe("Regex Compiler - Advanced Support", () => {
     const dsl = { 
       nodes: [
         { capture: { name: "quote", pattern: [{ charSet: { chars: "'\"" } }] } },
-        { repeat: { type: "any", zeroOrMore: true } },
+        { repeat: { type: "any" }, zeroOrMore: true },
         { backreference: "quote" }
       ] 
     };
@@ -141,7 +141,7 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
   test("count: 0 should generate {0}", () => {
     const dsl = {
       nodes: [
-        { repeat: { type: "digit", count: 0 } }
+        { repeat: { type: "digit" }, count: 0 }
       ]
     };
     const result = compileToJS(dsl) as any;
@@ -152,10 +152,8 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
     const dsl = {
       nodes: [
         { 
-          repeat: { 
-            type: { repeat: { type: "digit", count: 3 } }, 
-            oneOrMore: true 
-          } 
+          repeat: { repeat: { type: "digit" }, count: 3 }, 
+          oneOrMore: true 
         }
       ]
     };
@@ -166,7 +164,7 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
   test("multi-character literals in repeat should be wrapped", () => {
     const dsl = {
       nodes: [
-        { repeat: { type: { literal: "abc" }, zeroOrMore: true } }
+        { repeat: "abc", zeroOrMore: true }
       ]
     };
     const result = compileToJS(dsl) as any;
@@ -177,11 +175,11 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
     const dsl = {
       nodes: [
         { startOfLine: true },
-        { capture: { name: "user", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z0-9._%+-", exclude: false } }, oneOrMore: true } }] } },
-        { literal: "@" },
-        { capture: { name: "domain", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z0-9.-", exclude: false } }, oneOrMore: true } }] } },
-        { literal: "." },
-        { capture: { name: "tld", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z", exclude: false } }, min: 2 } }] } },
+        { capture: { name: "user", pattern: [{ repeat: { charSet: { chars: "a-zA-Z0-9._%+-", exclude: false } }, oneOrMore: true }] } },
+        "@",
+        { capture: { name: "domain", pattern: [{ repeat: { charSet: { chars: "a-zA-Z0-9.-", exclude: false } }, oneOrMore: true }] } },
+        ".",
+        { capture: { name: "tld", pattern: [{ repeat: { charSet: { chars: "a-zA-Z", exclude: false } }, min: 2 }] } },
         { endOfLine: true }
       ],
       flags: { ignoreCase: true }
@@ -195,15 +193,13 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
     const dsl = {
       nodes: [
         { 
-          repeat: { 
-            type: {
-              choice: [
-                [{ literal: "a" }],
-                [{ repeat: { type: "digit", count: 2 } }]
-              ]
-            },
-            optional: true 
-          } 
+          repeat: {
+            choice: [
+              ["a"],
+              [{ repeat: { type: "digit" }, count: 2 }]
+            ]
+          },
+          optional: true 
         }
       ]
     };
@@ -214,13 +210,11 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
   test("concatenated groups in repeat should be wrapped", () => {
     const dsl = {
       nodes: [{
-        repeat: {
-          type: [
-            { capture: { pattern: [{ literal: "a" }] } },
-            { capture: { pattern: [{ literal: "b" }] } }
+          repeat: [
+            { capture: { pattern: ["a"] } },
+            { capture: { pattern: ["b"] } }
           ],
           oneOrMore: true
-        }
       }]
     };
     const result = compileToJS(dsl) as any;
@@ -230,13 +224,11 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
   test("concatenated character sets in repeat should be wrapped", () => {
     const dsl = {
       nodes: [{
-        repeat: {
-          type: [
-            { charSet: { chars: "a" } },
-            { charSet: { chars: "b" } }
-          ],
-          zeroOrMore: true
-        }
+        repeat: [
+          { charSet: { chars: "a" } },
+          { charSet: { chars: "b" } }
+        ],
+        zeroOrMore: true
       }]
     };
     const result = compileToJS(dsl) as any;
@@ -247,8 +239,8 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
     test('should catch duplicate capture group names', () => {
       const dsl = {
         nodes: [
-          { capture: { name: "user", pattern: [{ literal: "a" }] } },
-          { capture: { name: "user", pattern: [{ literal: "b" }] } }
+          { capture: { name: "user", pattern: ["a"] } },
+          { capture: { name: "user", pattern: ["b"] } }
         ]
       };
       const result = compileToJS(dsl) as any;
@@ -259,7 +251,7 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
     test('should catch invalid numeric backreferences', () => {
       const dsl = {
         nodes: [
-          { capture: { pattern: [{ literal: "a" }] } },
+          { capture: { pattern: ["a"] } },
           { backreference: 2 }
         ]
       };
@@ -271,7 +263,7 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
     test('should catch invalid named backreferences', () => {
       const dsl = {
         nodes: [
-          { capture: { name: "user", pattern: [{ literal: "a" }] } },
+          { capture: { name: "user", pattern: ["a"] } },
           { backreference: "admin" }
         ]
       };
@@ -283,7 +275,7 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
     test('should catch logical quantifier errors (min > max)', () => {
       const dsl = {
         nodes: [
-          { repeat: { type: "digit", min: 5, max: 2 } }
+          { repeat: { type: "digit" }, min: 5, max: 2 }
         ]
       };
       const result = compileToJS(dsl) as any;
@@ -302,8 +294,16 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
     });
 
     test('should catch negative count/min/max', () => {
-      expect(compileToJS({ nodes: [{ repeat: { type: 'digit', count: -1 } }] })).toHaveProperty('error');
-      expect(compileToJS({ nodes: [{ repeat: { type: 'digit', min: -5 } }] })).toHaveProperty('error');
+      expect(compileToJS({ nodes: [{ repeat: { type: "digit" }, count: -1 }] })).toHaveProperty('error');
+      expect(compileToJS({ nodes: [{ repeat: { type: "digit" }, min: -5 }] })).toHaveProperty('error');
+    });
+
+    test('should support implicit string literals', () => {
+      const dsl = {
+        nodes: ["abc", ".", "def"]
+      };
+      const result = compileToJS(dsl) as any;
+      expect(result.pattern).toBe("abc\\.def");
     });
   });
 });

@@ -7,14 +7,14 @@ export const EXAMPLE_REGISTRY = [
     dsl: {
       nodes: [
         { startOfLine: true },
-        { literal: "+" },
-        { repeat: { type: "digit", min: 1, max: 3 } },
-        { literal: " " },
-        { repeat: { type: "digit", count: 3 } },
-        { literal: " " },
-        { repeat: { type: "digit", count: 3 } },
-        { literal: " " },
-        { repeat: { type: "digit", count: 4 } },
+        "+",
+        { repeat: { type: "digit" }, min: 1, max: 3 },
+        " ",
+        { repeat: { type: "digit" }, count: 3 },
+        " ",
+        { repeat: { type: "digit" }, count: 3 },
+        " ",
+        { repeat: { type: "digit" }, count: 4 },
         { endOfLine: true }
       ]
     },
@@ -33,24 +33,22 @@ export const EXAMPLE_REGISTRY = [
     dsl: {
       nodes: [
         { startOfLine: true },
-        { capture: { name: "user", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z0-9._%+-", exclude: false } }, oneOrMore: true } }] } },
-        { literal: "@" },
+        { capture: { name: "user", pattern: [{ repeat: { charSet: { chars: "a-zA-Z0-9._%+-", exclude: false } }, oneOrMore: true }] } },
+        "@",
         { 
           capture: { 
             name: "domain", 
             pattern: [
-              { repeat: { type: { charSet: { chars: "a-zA-Z0-9-", exclude: false } }, oneOrMore: true } }
+              { repeat: { charSet: { chars: "a-zA-Z0-9-", exclude: false } }, oneOrMore: true }
             ] 
           } 
         },
         { 
-          repeat: { 
-            type: [
-              { literal: "." },
-              { capture: { name: "tld", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z", exclude: false } }, min: 2 } }] } }
-            ],
-            count: 1
-          } 
+          repeat: [
+            ".",
+            { capture: { name: "tld", pattern: [{ repeat: { charSet: { chars: "a-zA-Z", exclude: false } }, min: 2 }] } }
+          ],
+          count: 1
         },
         { endOfLine: true }
       ],
@@ -72,9 +70,9 @@ export const EXAMPLE_REGISTRY = [
     dsl: {
       nodes: [
         { startOfLine: true },
-        { lookaround: { type: "positiveLookahead", pattern: [{ repeat: { type: "any", zeroOrMore: true } }, { repeat: { type: "digit", count: 1 } }] } },
-        { lookaround: { type: "positiveLookahead", pattern: [{ repeat: { type: "any", zeroOrMore: true } }, { charSet: { chars: "a-zA-Z" } }] } },
-        { repeat: { type: "any", min: 8 } },
+        { lookaround: { type: "positiveLookahead", pattern: [{ repeat: { type: "any" }, zeroOrMore: true }, { repeat: { type: "digit" }, count: 1 }] } },
+        { lookaround: { type: "positiveLookahead", pattern: [{ repeat: { type: "any" }, zeroOrMore: true }, { charSet: { chars: "a-zA-Z" } }] } },
+        { repeat: { type: "any" }, min: 8 },
         { endOfLine: true }
       ]
     },
@@ -92,13 +90,13 @@ export const EXAMPLE_REGISTRY = [
     features: ["Backreferences", "Named Groups"],
     dsl: {
       nodes: [
-        { literal: "<" },
-        { capture: { name: "tag", pattern: [{ repeat: { type: "word", oneOrMore: true } }] } },
-        { literal: ">" },
-        { capture: { name: "content", pattern: [{ repeat: { type: "any", zeroOrMore: true, lazy: true } }] } },
-        { literal: "</" },
+        "<",
+        { capture: { name: "tag", pattern: [{ repeat: { type: "word" }, oneOrMore: true }] } },
+        ">",
+        { capture: { name: "content", pattern: [{ repeat: { type: "any" }, zeroOrMore: true, lazy: true }] } },
+        "</",
         { backreference: "tag" },
-        { literal: ">" }
+        ">"
       ]
     },
     testCases: [

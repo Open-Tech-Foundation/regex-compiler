@@ -79,12 +79,16 @@ function compileCharSet(node: CharSetType): string {
   return "";
 }
 
-function compileNode(node: RegexNode): string {
-  if ("literal" in node) {
-    return escapeLiteral(node.literal);
+function compileNode(node: any): string {
+  if (typeof node === "string") {
+    return escapeLiteral(node);
   }
 
-  if ("hex" in node) {
+  if (node.type !== undefined) {
+    return mapCharClass(node.type);
+  }
+
+  if (node.hex !== undefined) {
     return `\\x${node.hex}`;
   }
 
@@ -169,15 +173,10 @@ function compileNode(node: RegexNode): string {
   }
 
   if ("repeat" in node) {
-    const { type, count, min, max, optional, oneOrMore, zeroOrMore, lazy } = node.repeat;
-    let base = "";
-    if (typeof type === "string") {
-      base = mapCharClass(type as CharClassType);
-    } else {
-      base = Array.isArray(type)
-        ? type.map(compileNode).join("")
-        : compileNode(type as RegexNode);
-    }
+    const { repeat: type, count, min, max, optional, oneOrMore, zeroOrMore, lazy } = node;
+    let base = Array.isArray(type)
+      ? type.map(compileNode).join("")
+      : compileNode(type as RegexNode);
       
     if (!isAtomic(base)) {
       base = `(?:${base})`;
