@@ -67,6 +67,8 @@ Declare your flags anywhere in the array.
 ```json
 ["hello", { "flags": { "ignoreCase": true } }]
 ```
+> [!NOTE]
+> The `unicodeSets` (v) and `unicode` (u) flags are mutually exclusive — using both will produce a validation error.
 
 ## 📝 Email Validator Example
 
