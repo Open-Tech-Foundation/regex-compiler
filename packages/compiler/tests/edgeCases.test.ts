@@ -302,27 +302,27 @@ describe('Regex Compiler - Additional Edge Cases', () => {
         });
     });
 
-    // ── Choice (OR) ───────────────────────────────────────────────────────────
+    // ── Or (Alternation) ─────────────────────────────────────────────────────
 
-    describe('Choice (OR)', () => {
-        test('single-branch choice should error or warn', () => {
-            const result = compileToJS([{ choice: [['a']] }]) as any;
-            // A choice with one branch is always redundant — should warn or error
+    describe('Or (Alternation)', () => {
+        test('single-branch or should error or warn', () => {
+            const result = compileToJS([{ or: [['a']] }]) as any;
+            // An or with one branch is always redundant — should warn or error
             expect(result).toHaveProperty('error');
         });
 
-        test('choice with empty branch should error', () => {
-            const result = compileToJS([{ choice: [['a'], []] }]) as any;
+        test('or with empty branch should error', () => {
+            const result = compileToJS([{ or: [['a'], []] }]) as any;
             expect(result).toHaveProperty('error');
         });
 
-        test('choice compiles correct separator', () => {
-            const result = compileToJS([{ choice: [['cat'], ['dog'], ['bird']] }]) as any;
+        test('or compiles correct separator', () => {
+            const result = compileToJS([{ or: [['cat'], ['dog'], ['bird']] }]) as any;
             expect(result.pattern).toBe('cat|dog|bird');
         });
 
-        test('choice inside a repeat wraps correctly', () => {
-            const result = compileToJS([{ repeat: { choice: [['a'], ['b']] }, oneOrMore: true }]) as any;
+        test('or inside a repeat wraps correctly', () => {
+            const result = compileToJS([{ repeat: { or: [['a'], ['b']] }, oneOrMore: true }]) as any;
             expect(result.pattern).toBe('(?:a|b)+');
         });
     });

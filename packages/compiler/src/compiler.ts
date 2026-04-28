@@ -153,11 +153,11 @@ function compileNodeInternal(node: any, path: string, ctx: CompileContext): void
     return;
   }
 
-  if ('choice' in node) {
-    node.choice.forEach((option: any[], i: number) => {
+  if ('or' in node) {
+    node.or.forEach((option: any[], i: number) => {
       if (i > 0) ctx.pattern += '|';
       option.forEach((item, j) => {
-        compileNodeInternal(item, `${path}.choice.${i}.${j}`, ctx);
+        compileNodeInternal(item, `${path}.or.${i}.${j}`, ctx);
       });
     });
     ctx.mappings.push({ path, start, end: ctx.pattern.length });
@@ -323,7 +323,7 @@ export function validateDSL(input: any): ValidationResult {
       if (node && typeof node === 'object' && !('flags' in node) && !Array.isArray(node)) {
         const validKeys = [
           'type', 'hex', 'unicode', 'charSet', 'unicodeProperty', '$', 
-          'choice', 'capture', 'group', 'lookaround', 'backreference', 
+          'or', 'capture', 'group', 'lookaround', 'backreference', 
           'repeat', 'pattern'
         ];
         const nodeKeys = Object.keys(node);
@@ -498,8 +498,8 @@ export function validateDSL(input: any): ValidationResult {
               pass,
               { inLookbehind: node.lookaround.type.endsWith('Lookbehind') },
             );
-          if (node.choice) {
-            node.choice.forEach((c: any, j: number) => walk(c, `${currentPath}.choice.${j}`, pass, context));
+          if (node.or) {
+            node.or.forEach((c: any, j: number) => walk(c, `${currentPath}.or.${j}`, pass, context));
           }
         }
       });

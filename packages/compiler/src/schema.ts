@@ -84,7 +84,7 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
           path: ['min'],
         },
       ),
-    z.object({ choice: z.array(z.array(RegexNodeSchema).min(1)).min(2) }),
+    z.object({ or: z.array(z.array(RegexNodeSchema).min(1)).min(2) }),
     z.object({
       capture: z.object({
         name: z.string().min(1).optional(),

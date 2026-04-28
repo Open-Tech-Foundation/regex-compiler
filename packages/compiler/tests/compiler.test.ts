@@ -185,11 +185,11 @@ describe('Regex Compiler - Edge Cases & Bug Fixes', () => {
     expect(result.flags).toBe('i');
   });
 
-  test('Complex Nested Choice and Repeats', () => {
+  test('Complex Nested Or and Repeats', () => {
     const dsl = [
       {
         repeat: {
-          choice: [['a'], [{ repeat: { type: 'digit' }, count: 2 }]],
+          or: [['a'], [{ repeat: { type: 'digit' }, count: 2 }]],
         },
         optional: true,
       },
@@ -264,8 +264,8 @@ describe('Regex Compiler - Edge Cases & Bug Fixes', () => {
       expect(compileToJS([{ unicode: '123' }])).toHaveProperty('error');
     });
 
-    test('should reject empty choices and captures', () => {
-      expect(compileToJS([{ choice: [] }])).toHaveProperty('error');
+    test('should reject empty or and captures', () => {
+      expect(compileToJS([{ or: [] }])).toHaveProperty('error');
       expect(compileToJS([{ capture: { pattern: [] } }])).toHaveProperty('error');
     });
 

@@ -281,15 +281,15 @@ export const REFERENCE_DATA = [
     ],
   },
   {
-    category: 'Groups & Choice',
+    category: 'Groups & Or',
     items: [
       {
         title: 'Alternation (OR)',
         regex: 'cat|dog',
-        dsl: '{ "choice": [ ["cat"], ["dog"] ] }',
+        dsl: '{ "or": [ ["cat"], ["dog"] ] }',
         description: 'Matches either pattern.',
         testString: 'cat dog',
-        details: [{ part: '|', meaning: 'Choice/OR operator' }],
+        details: [{ part: '|', meaning: 'OR operator' }],
       },
       {
         title: 'Capturing Group',
