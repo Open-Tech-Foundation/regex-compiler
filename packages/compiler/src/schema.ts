@@ -54,6 +54,26 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
       })
       .refine(
         (data) => {
+          const quantifiers = ['count', 'min', 'max', 'optional', 'oneOrMore', 'zeroOrMore'];
+          const used = quantifiers.filter((q) => data[q] !== undefined && data[q] !== false);
+
+          if (data.count !== undefined && used.length > 1) return false;
+
+          const shorthand = ['optional', 'oneOrMore', 'zeroOrMore'].filter((q) => data[q]);
+          if (shorthand.length > 1) return false;
+
+          if (shorthand.length > 0 && (data.min !== undefined || data.max !== undefined)) return false;
+
+          return true;
+        },
+        {
+          message:
+            'Conflicting quantifiers. Use only one of: count, min/max, optional, oneOrMore, or zeroOrMore.',
+          path: ['repeat'],
+        },
+      )
+      .refine(
+        (data) => {
           if (data.min !== undefined && data.max !== undefined) {
             return data.min <= data.max;
           }

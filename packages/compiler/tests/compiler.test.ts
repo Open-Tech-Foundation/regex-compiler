@@ -252,6 +252,13 @@ describe('Regex Compiler - Edge Cases & Bug Fixes', () => {
       expect(result.issues[0].message).toContain('min must be less than or equal to max');
     });
 
+    test('should catch conflicting quantifiers', () => {
+      const dsl = [{ repeat: { type: 'digit' }, oneOrMore: true, count: 4 }];
+      const result = compileToJS(dsl) as any;
+      expect(result).toHaveProperty('error');
+      expect(result.issues[0].message).toContain('Conflicting quantifiers');
+    });
+
     test('should enforce strict hex and unicode formats', () => {
       expect(compileToJS([{ hex: 'G1' }])).toHaveProperty('error');
       expect(compileToJS([{ unicode: '123' }])).toHaveProperty('error');
