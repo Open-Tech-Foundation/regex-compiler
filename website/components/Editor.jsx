@@ -1,4 +1,4 @@
-import { onCleanup } from "@opentf/web";
+import { onCleanup } from '@opentf/web';
 import * as monaco from 'monaco-editor';
 
 export default function Editor({ value, onChange, issues }) {
@@ -15,7 +15,7 @@ export default function Editor({ value, onChange, issues }) {
         minimap: { enabled: false },
         fontSize: 14,
         scrollBeyondLastLine: false,
-        padding: { top: 16, bottom: 16 }
+        padding: { top: 16, bottom: 16 },
       });
 
       editor.onDidChangeModelContent(() => {
@@ -50,43 +50,45 @@ export default function Editor({ value, onChange, issues }) {
       return;
     }
 
-    const markers = issues.map(issue => {
-      const path = issue.path.split('.');
-      const lastKey = path[path.length - 1];
-      let actualKey = lastKey;
-      
-      let matches = model.findMatches(`"${lastKey}"`, false, false, true, null, true);
-      
-      // If not found (e.g. index path 'nodes.0'), look for keys mentioned in the message
-      if (matches.length === 0) {
-        const foundKeysMatch = issue.message.match(/Found keys: (.*)/);
-        if (foundKeysMatch) {
-          const keys = foundKeysMatch[1].split(', ');
-          for (const key of keys) {
-            const m = model.findMatches(`"${key}"`, false, false, true, null, true);
-            if (m.length > 0) {
-              matches = m;
-              actualKey = key;
-              break;
+    const markers = issues
+      .map((issue) => {
+        const path = issue.path.split('.');
+        const lastKey = path[path.length - 1];
+        let actualKey = lastKey;
+
+        let matches = model.findMatches(`"${lastKey}"`, false, false, true, null, true);
+
+        // If not found (e.g. index path 'nodes.0'), look for keys mentioned in the message
+        if (matches.length === 0) {
+          const foundKeysMatch = issue.message.match(/Found keys: (.*)/);
+          if (foundKeysMatch) {
+            const keys = foundKeysMatch[1].split(', ');
+            for (const key of keys) {
+              const m = model.findMatches(`"${key}"`, false, false, true, null, true);
+              if (m.length > 0) {
+                matches = m;
+                actualKey = key;
+                break;
+              }
             }
           }
         }
-      }
 
-      if (matches.length > 0) {
-        // Find the match that corresponds to the correct index if possible
-        const match = matches[0];
-        return {
-          startLineNumber: match.range.startLineNumber,
-          startColumn: match.range.startColumn,
-          endLineNumber: match.range.endLineNumber,
-          endColumn: match.range.startColumn + actualKey.length + 2,
-          message: issue.message,
-          severity: monaco.MarkerSeverity.Error
-        };
-      }
-      return null;
-    }).filter(m => m !== null);
+        if (matches.length > 0) {
+          // Find the match that corresponds to the correct index if possible
+          const match = matches[0];
+          return {
+            startLineNumber: match.range.startLineNumber,
+            startColumn: match.range.startColumn,
+            endLineNumber: match.range.endLineNumber,
+            endColumn: match.range.startColumn + actualKey.length + 2,
+            message: issue.message,
+            severity: monaco.MarkerSeverity.Error,
+          };
+        }
+        return null;
+      })
+      .filter((m) => m !== null);
 
     // If no markers found for paths, fallback to first line for first error
     if (markers.length === 0 && issues.length > 0) {
@@ -96,7 +98,7 @@ export default function Editor({ value, onChange, issues }) {
         endLineNumber: 1,
         endColumn: 100,
         message: issues[0].message,
-        severity: monaco.MarkerSeverity.Error
+        severity: monaco.MarkerSeverity.Error,
       });
     }
 

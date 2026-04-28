@@ -1,14 +1,14 @@
-import { compileToJS } from "../../packages/compiler/src/compiler";
-import { EXAMPLE_REGISTRY } from "../data/examples";
-import DSLEditor from "./DSLEditor";
-import CompilationPreview from "./CompilationPreview";
-import TestBench from "./TestBench";
-import SampleLibraryModal from "./SampleLibraryModal";
+import { compileToJS } from '../../packages/compiler/src/compiler';
+import { EXAMPLE_REGISTRY } from '../data/examples';
+import DSLEditor from './DSLEditor';
+import CompilationPreview from './CompilationPreview';
+import TestBench from './TestBench';
+import SampleLibraryModal from './SampleLibraryModal';
 
 export default function RegexBuilder() {
   const selectedExample = $state(EXAMPLE_REGISTRY[0]);
   const dslText = $state(JSON.stringify(EXAMPLE_REGISTRY[0].dsl, null, 2));
-  const manualTestString = $state("");
+  const manualTestString = $state('');
   const isLibraryOpen = $state(false);
   const isCopied = $state(false);
 
@@ -17,13 +17,13 @@ export default function RegexBuilder() {
       const dsl = JSON.parse(dslText);
       return compileToJS(dsl);
     } catch (e) {
-      return { error: "Invalid JSON format" };
+      return { error: 'Invalid JSON format' };
     }
   });
 
   const compiledRegex = $derived(() => {
     if (compilationResult && 'pattern' in compilationResult) {
-      return `/${compilationResult.pattern}/${compilationResult.flags || ""}`;
+      return `/${compilationResult.pattern}/${compilationResult.flags || ''}`;
     }
     return null;
   });
@@ -39,12 +39,12 @@ export default function RegexBuilder() {
   };
 
   const testResults = $derived(() => {
-    return selectedExample.testCases.map(tc => {
+    return selectedExample.testCases.map((tc) => {
       const isMatch = checkMatch(tc.input);
       return {
         ...tc,
         isMatch,
-        isCorrect: isMatch === tc.expected
+        isCorrect: isMatch === tc.expected,
       };
     });
   });
@@ -62,46 +62,46 @@ export default function RegexBuilder() {
     if (!compiledRegex) return;
     navigator.clipboard.writeText(compiledRegex);
     isCopied = true;
-    setTimeout(() => isCopied = false, 2000);
+    setTimeout(() => (isCopied = false), 2000);
   };
 
   return (
     <div className="flex h-full w-full overflow-hidden">
       {/* Left Column */}
       <div className="w-1/2 h-full border-r border-[#27272a]">
-        <DSLEditor 
-          value={dslText} 
+        <DSLEditor
+          value={dslText}
           error={compilationResult?.error}
           issues={compilationResult?.issues}
-          onChange={(val) => dslText = val} 
-          onOpenLibrary={() => isLibraryOpen = true} 
+          onChange={(val) => (dslText = val)}
+          onOpenLibrary={() => (isLibraryOpen = true)}
         />
       </div>
 
       {/* Right Column */}
       <div className="w-1/2 h-full bg-[#09090b] overflow-y-auto custom-scrollbar">
         <div className="p-6 flex flex-col gap-6">
-          <CompilationPreview 
-            result={compilationResult} 
-            compiledRegex={compiledRegex} 
-            isCopied={isCopied} 
-            onCopy={copyToClipboard} 
+          <CompilationPreview
+            result={compilationResult}
+            compiledRegex={compiledRegex}
+            isCopied={isCopied}
+            onCopy={copyToClipboard}
           />
 
-          <TestBench 
-            manualTestString={manualTestString} 
-            onManualInput={(val) => manualTestString = val} 
-            manualMatch={manualMatch} 
-            testResults={testResults} 
+          <TestBench
+            manualTestString={manualTestString}
+            onManualInput={(val) => (manualTestString = val)}
+            manualMatch={manualMatch}
+            testResults={testResults}
           />
         </div>
       </div>
 
       {/* Modals */}
-      <SampleLibraryModal 
-        isOpen={isLibraryOpen} 
-        onClose={() => isLibraryOpen = false} 
-        onLoadExample={loadExample} 
+      <SampleLibraryModal
+        isOpen={isLibraryOpen}
+        onClose={() => (isLibraryOpen = false)}
+        onLoadExample={loadExample}
       />
     </div>
   );

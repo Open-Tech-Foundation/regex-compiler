@@ -1,6 +1,6 @@
-import { createStore } from "@opentf/web";
+import { createStore } from '@opentf/web';
 
 export const uiStore = createStore({
   isReferenceOpen: false,
-  isLibraryOpen: false
+  isLibraryOpen: false,
 });

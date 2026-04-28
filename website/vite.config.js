@@ -1,17 +1,17 @@
-import { defineConfig } from 'vite'
-import { babel } from '@rollup/plugin-babel'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'vite';
+import { babel } from '@rollup/plugin-babel';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   esbuild: {
-    jsx: 'preserve'
+    jsx: 'preserve',
   },
   optimizeDeps: {
     rolldownOptions: {
       transform: {
-        jsx: 'preserve'
-      }
-    }
+        jsx: 'preserve',
+      },
+    },
   },
   plugins: [
     tailwindcss(),
@@ -21,15 +21,10 @@ export default defineConfig({
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
         exclude: 'node_modules/**',
         configFile: false,
-        presets: [
-          ["@babel/preset-typescript", { isTSX: true, allExtensions: true }]
-        ],
-        plugins: [
-          "@babel/plugin-syntax-jsx",
-          ["@opentf/web/compiler"]
-        ]
+        presets: [['@babel/preset-typescript', { isTSX: true, allExtensions: true }]],
+        plugins: ['@babel/plugin-syntax-jsx', ['@opentf/web/compiler']],
       }),
-      enforce: 'pre'
-    }
-  ]
-})
+      enforce: 'pre',
+    },
+  ],
+});

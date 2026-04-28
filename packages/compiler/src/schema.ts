@@ -1,11 +1,16 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const CharClassSchema = z.enum([
-  "digit", "nonDigit", 
-  "word", "nonWord", 
-  "whitespace", "nonWhitespace", 
-  "any", 
-  "tab", "newline", "carriageReturn"
+  'digit',
+  'nonDigit',
+  'word',
+  'nonWord',
+  'whitespace',
+  'nonWhitespace',
+  'any',
+  'tab',
+  'newline',
+  'carriageReturn',
 ]);
 
 export const FlagsSchema = z.object({
@@ -25,7 +30,7 @@ export const CharSetSchema: z.ZodType<any> = z.lazy(() =>
     z.object({ chars: z.string(), exclude: z.boolean().optional() }),
     z.object({ intersection: z.array(CharSetSchema).min(2) }),
     z.object({ subtraction: z.object({ left: CharSetSchema, right: CharSetSchema }) }),
-  ])
+  ]),
 );
 
 // Recursive schema for Regex Nodes
@@ -33,27 +38,32 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
   z.union([
     z.string(),
     z.object({ type: CharClassSchema }),
-    z.object({ hex: z.string().regex(/^[0-9a-fA-F]{2}$/, "Must be 2 hex digits") }),
-    z.object({ unicode: z.string().regex(/^[0-9a-fA-F]{4,5}$/, "Must be 4-5 hex digits") }),
+    z.object({ hex: z.string().regex(/^[0-9a-fA-F]{2}$/, 'Must be 2 hex digits') }),
+    z.object({ unicode: z.string().regex(/^[0-9a-fA-F]{4,5}$/, 'Must be 4-5 hex digits') }),
     z.object({ charSet: CharSetSchema }),
-    z.object({
-      repeat: z.union([RegexNodeSchema, z.array(RegexNodeSchema)]),
-      count: z.number().int().nonnegative().optional(),
-      min: z.number().int().nonnegative().optional(),
-      max: z.number().int().nonnegative().optional(),
-      optional: z.boolean().optional(),
-      oneOrMore: z.boolean().optional(),
-      zeroOrMore: z.boolean().optional(),
-      lazy: z.boolean().optional(),
-    }).refine(data => {
-      if (data.min !== undefined && data.max !== undefined) {
-        return data.min <= data.max;
-      }
-      return true;
-    }, {
-      message: "min must be less than or equal to max",
-      path: ["min"]
-    }),
+    z
+      .object({
+        repeat: z.union([RegexNodeSchema, z.array(RegexNodeSchema)]),
+        count: z.number().int().nonnegative().optional(),
+        min: z.number().int().nonnegative().optional(),
+        max: z.number().int().nonnegative().optional(),
+        optional: z.boolean().optional(),
+        oneOrMore: z.boolean().optional(),
+        zeroOrMore: z.boolean().optional(),
+        lazy: z.boolean().optional(),
+      })
+      .refine(
+        (data) => {
+          if (data.min !== undefined && data.max !== undefined) {
+            return data.min <= data.max;
+          }
+          return true;
+        },
+        {
+          message: 'min must be less than or equal to max',
+          path: ['min'],
+        },
+      ),
     z.object({ choice: z.array(z.array(RegexNodeSchema).min(1)).min(1) }),
     z.object({
       capture: z.object({
@@ -66,10 +76,15 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
         pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema).min(1)]),
       }),
     }),
-    z.object({ $: z.enum(["start", "end", "boundary", "notBoundary"]) }),
+    z.object({ $: z.enum(['start', 'end', 'boundary', 'notBoundary']) }),
     z.object({
       lookaround: z.object({
-        type: z.enum(["positiveLookahead", "negativeLookahead", "positiveLookbehind", "negativeLookbehind"]),
+        type: z.enum([
+          'positiveLookahead',
+          'negativeLookahead',
+          'positiveLookbehind',
+          'negativeLookbehind',
+        ]),
         pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema)]),
       }),
     }),
@@ -80,23 +95,17 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
         exclude: z.boolean().optional(),
       }),
     }),
-  ])
+  ]),
 );
 
 export const RegexDSLSchema = z.union([
-  z.array(z.union([
-    RegexNodeSchema,
-    z.object({ flags: FlagsSchema })
-  ])),
+  z.array(z.union([RegexNodeSchema, z.object({ flags: FlagsSchema })])),
   z.string(),
   z.object({
     pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema)]),
     flags: FlagsSchema.optional(),
   }),
-  z.intersection(
-    RegexNodeSchema,
-    z.object({ flags: FlagsSchema.optional() })
-  )
+  z.intersection(RegexNodeSchema, z.object({ flags: FlagsSchema.optional() })),
 ]);
 
 export type RegexDSL = z.infer<typeof RegexDSLSchema>;

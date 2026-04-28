@@ -1,4 +1,4 @@
-import { mountApp } from "@opentf/web";
+import { mountApp } from '@opentf/web';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 
@@ -19,7 +19,7 @@ const guards = import.meta.glob('./app/routeGuard.{js,ts,jsx,tsx}', { eager: tru
 const guard = Object.values(guards)[0]?.default;
 
 // 3. Bootstrap the Web App Framework Application
-mountApp({ 
-  pages, 
-  guard 
+mountApp({
+  pages,
+  guard,
 });
