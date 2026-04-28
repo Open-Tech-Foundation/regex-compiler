@@ -35,7 +35,7 @@ npm install @opentf/regex-compiler
 
 ## 🛠 Usage
 
-Explore the library's capabilities with the new **Fluent DSL**:
+Explore the library's capabilities:
 
 ### Compiling a Named Capture Group
 
@@ -50,7 +50,7 @@ const { pattern } = compileToJS(dsl);
 //=> "(?<user>\\w+)"
 ```
 
-## 🚀 Fluent DSL Features
+## 🚀 DSL Features
 
 Our DSL is optimized for developer productivity with a "one-form, no-confusion" standard:
 
