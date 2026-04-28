@@ -71,7 +71,9 @@ export default function RegexBuilder() {
       <div className="w-1/2 h-full border-r border-[#27272a]">
         <DSLEditor 
           value={dslText} 
-          onchange={(val) => dslText = val} 
+          error={compilationResult?.error}
+          issues={compilationResult?.issues}
+          onChange={(val) => dslText = val} 
           onOpenLibrary={() => isLibraryOpen = true} 
         />
       </div>

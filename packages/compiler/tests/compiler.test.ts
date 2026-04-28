@@ -242,4 +242,23 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
     const result = compileToJS(dsl) as any;
     expect(result.pattern).toBe("(?:[a][b])*");
   });
+
+  test("negative count should return validation error", () => {
+    const dsl = {
+      nodes: [{ repeat: { type: "digit", count: -3 } }]
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.error).toBeDefined();
+    expect(result.error).toContain("count: Too small");
+  });
+
+  test("negative min/max should return validation error", () => {
+    const dsl = {
+      nodes: [{ repeat: { type: "digit", min: -1, max: -5 } }]
+    };
+    const result = compileToJS(dsl) as any;
+    expect(result.error).toBeDefined();
+    expect(result.error).toContain("min: Too small");
+    expect(result.error).toContain("max: Too small");
+  });
 });

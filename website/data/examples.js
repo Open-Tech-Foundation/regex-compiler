@@ -33,27 +33,25 @@ export const EXAMPLE_REGISTRY = [
     dsl: {
       nodes: [
         { startOfLine: true },
-        { capture: { name: "user", pattern: [{ repeat: { type: { charSet: { chars: "-a-zA-Z0-9._%+", exclude: false } }, oneOrMore: true } }] } },
+        { capture: { name: "user", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z0-9._%+-", exclude: false } }, oneOrMore: true } }] } },
         { literal: "@" },
         { 
           capture: { 
             name: "domain", 
             pattern: [
-              { repeat: { type: { charSet: { chars: "a-zA-Z0-9-", exclude: false } }, oneOrMore: true } },
-              { 
-                repeat: { 
-                  type: [
-                    { literal: "." },
-                    { repeat: { type: { charSet: { chars: "a-zA-Z0-9-", exclude: false } }, oneOrMore: true } }
-                  ], 
-                  zeroOrMore: true 
-                } 
-              }
+              { repeat: { type: { charSet: { chars: "a-zA-Z0-9-", exclude: false } }, oneOrMore: true } }
             ] 
           } 
         },
-        { literal: "." },
-        { capture: { name: "tld", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z", exclude: false } }, min: 2 } }] } },
+        { 
+          repeat: { 
+            type: [
+              { literal: "." },
+              { capture: { name: "tld", pattern: [{ repeat: { type: { charSet: { chars: "a-zA-Z", exclude: false } }, min: 2 } }] } }
+            ],
+            count: 1
+          } 
+        },
         { endOfLine: true }
       ],
       flags: { ignoreCase: true }

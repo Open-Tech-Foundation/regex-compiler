@@ -207,9 +207,14 @@ function compileNode(node: RegexNode): string {
 export function validateDSL(input: any): ValidationResult {
   const result = RegexDSLSchema.safeParse(input);
   if (!result.success) {
+    const issues = result.error.issues.map(e => ({
+      path: e.path.join("."),
+      message: e.message
+    }));
     return {
       success: false,
-      error: result.error.issues.map(e => `${e.path.join(".")}: ${e.message}`).join("; ")
+      error: issues.map(i => `${i.path}: ${i.message}`).join("; "),
+      issues
     };
   }
   return {
@@ -218,15 +223,33 @@ export function validateDSL(input: any): ValidationResult {
   };
 }
 
-export function compileToJS(input: any): CompiledRegex | { error: string } {
+export function compileToJS(input: any): CompiledRegex | { error: string; issues: { path: string; message: string }[] } {
   const validation = validateDSL(input);
   if (!validation.success) {
-    return { error: validation.error! };
+    return { 
+      error: validation.error!,
+      issues: validation.issues || []
+    };
   }
 
-  const dsl = validation.data as RegexDSL;
-  return {
-    pattern: dsl.nodes.map(compileNode).join(""),
-    flags: compileFlags(dsl.flags)
-  };
+  const { nodes, flags } = validation.data;
+  const pattern = nodes.map(compileNode).join("");
+  const flagStr = Object.entries(flags || {})
+    .filter(([_, value]) => value)
+    .map(([key]) => {
+      switch (key) {
+        case "global": return "g";
+        case "ignoreCase": return "i";
+        case "multiline": return "m";
+        case "dotAll": return "s";
+        case "unicode": return "u";
+        case "sticky": return "y";
+        case "indices": return "d";
+        case "unicodeSets": return "v";
+        default: return "";
+      }
+    })
+    .join("");
+
+  return { pattern, flags: flagStr };
 }

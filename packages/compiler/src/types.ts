@@ -8,5 +8,6 @@ export interface CompiledRegex {
 export interface ValidationResult {
   success: boolean;
   error?: string;
+  issues?: { path: string; message: string }[];
   data?: any; 
 }
