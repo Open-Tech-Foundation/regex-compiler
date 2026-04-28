@@ -66,10 +66,7 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
         pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema).min(1)]),
       }),
     }),
-    z.object({ startOfLine: z.boolean() }),
-    z.object({ endOfLine: z.boolean() }),
-    z.object({ wordBoundary: z.boolean() }),
-    z.object({ nonWordBoundary: z.boolean() }),
+    z.object({ $: z.enum(["start", "end", "boundary", "notBoundary"]) }),
     z.object({
       lookaround: z.object({
         type: z.enum(["positiveLookahead", "negativeLookahead", "positiveLookbehind", "negativeLookbehind"]),

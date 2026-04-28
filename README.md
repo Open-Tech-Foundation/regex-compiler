@@ -83,7 +83,7 @@ No more nesting quantifiers inside a `type` key.
 ```json
 {
   "nodes": [
-    { "startOfLine": true },
+    { "$": "start" },
     { 
       "capture": { 
         "name": "user", 
@@ -125,7 +125,7 @@ No more nesting quantifiers inside a `type` key.
         ] 
       } 
     },
-    { "endOfLine": true }
+    { "$": "end" }
   ],
   "flags": { "ignoreCase": true }
 }

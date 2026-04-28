@@ -5,7 +5,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Any Character", 
         regex: ".", 
-        dsl: "{ \"repeat\": { \"type\": \"any\", \"count\": 1 } }", 
+        dsl: "{ \"repeat\": { \"type\": \"any\" }, \"count\": 1 }", 
         description: "Matches any character except line breaks.",
         testString: "glib jocks vex dwarves!",
         details: [{ part: ".", meaning: "Any character (except newline)" }]
@@ -58,7 +58,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Digit", 
         regex: "\\d", 
-        dsl: "{ \"repeat\": { \"type\": \"digit\", \"count\": 1 } }", 
+        dsl: "{ \"repeat\": { \"type\": \"digit\" }, \"count\": 1 }", 
         description: "Matches any digit (0-9).", 
         testString: "Agent 007",
         details: [{ part: "\\d", meaning: "Any digit 0-9" }]
@@ -66,7 +66,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Non-Digit", 
         regex: "\\D", 
-        dsl: "{ \"repeat\": { \"type\": \"nonDigit\", \"count\": 1 } }", 
+        dsl: "{ \"repeat\": { \"type\": \"nonDigit\" }, \"count\": 1 }", 
         description: "Matches any character that is not a digit.", 
         testString: "Agent 007",
         details: [{ part: "\\D", meaning: "Any character NOT a digit" }]
@@ -74,7 +74,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Word Character", 
         regex: "\\w", 
-        dsl: "{ \"repeat\": { \"type\": \"word\", \"count\": 1 } }", 
+        dsl: "{ \"repeat\": { \"type\": \"word\" }, \"count\": 1 }", 
         description: "Matches any alphanumeric character plus underscore.", 
         testString: "var_1 = 10",
         details: [{ part: "\\w", meaning: "A-Z, a-z, 0-9, and _" }]
@@ -82,7 +82,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Non-Word Character", 
         regex: "\\W", 
-        dsl: "{ \"repeat\": { \"type\": \"nonWord\", \"count\": 1 } }", 
+        dsl: "{ \"repeat\": { \"type\": \"nonWord\" }, \"count\": 1 }", 
         description: "Matches any character that is not a word character.", 
         testString: "100%",
         details: [{ part: "\\W", meaning: "Any character NOT a word character" }]
@@ -90,7 +90,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Whitespace", 
         regex: "\\s", 
-        dsl: "{ \"repeat\": { \"type\": \"whitespace\", \"count\": 1 } }", 
+        dsl: "{ \"repeat\": { \"type\": \"whitespace\" }, \"count\": 1 }", 
         description: "Matches any whitespace character.", 
         testString: "a b\nc",
         details: [{ part: "\\s", meaning: "Space, tab, newline, etc." }]
@@ -98,7 +98,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Non-Whitespace", 
         regex: "\\S", 
-        dsl: "{ \"repeat\": { \"type\": \"nonWhitespace\", \"count\": 1 } }", 
+        dsl: "{ \"repeat\": { \"type\": \"nonWhitespace\" }, \"count\": 1 }", 
         description: "Matches any character that is not whitespace.", 
         testString: " a ",
         details: [{ part: "\\S", meaning: "Any character NOT whitespace" }]
@@ -106,7 +106,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Newline", 
         regex: "\\n", 
-        dsl: "{ \"repeat\": { \"type\": \"newline\", \"count\": 1 } }", 
+        dsl: "{ \"repeat\": { \"type\": \"newline\" }, \"count\": 1 }", 
         description: "Matches a line feed character.", 
         testString: "line1\nline2",
         details: [{ part: "\\n", meaning: "Newline character (LF)" }]
@@ -114,7 +114,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Tab", 
         regex: "\\t", 
-        dsl: "{ \"repeat\": { \"type\": \"tab\", \"count\": 1 } }", 
+        dsl: "{ \"repeat\": { \"type\": \"tab\" }, \"count\": 1 }", 
         description: "Matches a horizontal tab character.", 
         testString: "col1\tcol2",
         details: [{ part: "\\t", meaning: "Tab character" }]
@@ -172,7 +172,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Asterisk", 
         regex: "a*", 
-        dsl: "{ \"repeat\": { \"type\": { \"literal\": \"a\" }, \"zeroOrMore\": true } }", 
+        dsl: "{ \"repeat\": \"a\", \"zeroOrMore\": true }", 
         description: "Matches 0 or more times.", 
         testString: "baaaa!",
         details: [{ part: "*", meaning: "0 or more times (greedy)" }]
@@ -180,7 +180,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Plus", 
         regex: "a+", 
-        dsl: "{ \"repeat\": { \"type\": { \"literal\": \"a\" }, \"oneOrMore\": true } }", 
+        dsl: "{ \"repeat\": \"a\", \"oneOrMore\": true }", 
         description: "Matches 1 or more times.", 
         testString: "baaaa!",
         details: [{ part: "+", meaning: "1 or more times (greedy)" }]
@@ -188,7 +188,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Question Mark", 
         regex: "a?", 
-        dsl: "{ \"repeat\": { \"type\": { \"literal\": \"a\" }, \"optional\": true } }", 
+        dsl: "{ \"repeat\": \"a\", \"optional\": true }", 
         description: "Matches 0 or 1 time.", 
         testString: "apple pear",
         details: [{ part: "?", meaning: "Optional (0 or 1 time)" }]
@@ -196,7 +196,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Range (min, max)", 
         regex: "a{2,5}", 
-        dsl: "{ \"repeat\": { \"type\": { \"literal\": \"a\" }, \"min\": 2, \"max\": 5 } }", 
+        dsl: "{ \"repeat\": \"a\", \"min\": 2, \"max\": 5 }", 
         description: "Matches between n and m times.", 
         testString: "baaaa!",
         details: [{ part: "{2,5}", meaning: "Between 2 and 5 times" }]
@@ -204,7 +204,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Lazy Quantifier", 
         regex: "a*?", 
-        dsl: "{ \"repeat\": { \"type\": { \"literal\": \"a\" }, \"zeroOrMore\": true, \"lazy\": true } }", 
+        dsl: "{ \"repeat\": \"a\", \"zeroOrMore\": true, \"lazy\": true }", 
         description: "Matches the smallest possible number of occurrences.", 
         testString: "baaaa!",
         details: [{ part: "*?", meaning: "0 or more times (non-greedy)" }]
@@ -217,7 +217,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Start of Input", 
         regex: "^", 
-        dsl: "{ \"startOfLine\": true }", 
+        dsl: "{ \"$\": \"start\" }", 
         description: "Matches beginning of input.", 
         testString: "hello",
         details: [{ part: "^", meaning: "Start of line/input" }]
@@ -225,7 +225,7 @@ export const REFERENCE_DATA = [
       { 
         title: "End of Input", 
         regex: "$", 
-        dsl: "{ \"endOfLine\": true }", 
+        dsl: "{ \"$\": \"end\" }", 
         description: "Matches end of input.", 
         testString: "hello",
         details: [{ part: "$", meaning: "End of line/input" }]
@@ -233,7 +233,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Word Boundary", 
         regex: "\\b", 
-        dsl: "{ \"wordBoundary\": true }", 
+        dsl: "{ \"$\": \"boundary\" }", 
         description: "Matches a word boundary position.", 
         testString: "hi there!",
         details: [{ part: "\\b", meaning: "Boundary between word/non-word" }]
@@ -241,7 +241,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Non-Word Boundary", 
         regex: "\\B", 
-        dsl: "{ \"nonWordBoundary\": true }", 
+        dsl: "{ \"$\": \"notBoundary\" }", 
         description: "Matches position NOT at a word boundary.", 
         testString: "hello",
         details: [{ part: "\\B", meaning: "Not a word boundary" }]
@@ -249,7 +249,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Positive Lookahead", 
         regex: "(?=pie)", 
-        dsl: "{ \"lookaround\": { \"type\": \"positiveLookahead\", \"pattern\": [{ \"literal\": \"pie\" }] } }", 
+        dsl: "{ \"lookaround\": { \"type\": \"positiveLookahead\", \"pattern\": [\"pie\"] } }", 
         description: "Matches position followed by pattern.", 
         testString: "applepie",
         details: [{ part: "(?=...)", meaning: "Positive Lookahead" }]
@@ -257,7 +257,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Negative Lookahead", 
         regex: "(?!pie)", 
-        dsl: "{ \"lookaround\": { \"type\": \"negativeLookahead\", \"pattern\": [{ \"literal\": \"pie\" }] } }", 
+        dsl: "{ \"lookaround\": { \"type\": \"negativeLookahead\", \"pattern\": [\"pie\"] } }", 
         description: "Matches position NOT followed by pattern.", 
         testString: "applesauce",
         details: [{ part: "(?!...)", meaning: "Negative Lookahead" }]
@@ -265,7 +265,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Positive Lookbehind", 
         regex: "(?<=apple)", 
-        dsl: "{ \"lookaround\": { \"type\": \"positiveLookbehind\", \"pattern\": [{ \"literal\": \"apple\" }] } }", 
+        dsl: "{ \"lookaround\": { \"type\": \"positiveLookbehind\", \"pattern\": [\"apple\"] } }", 
         description: "Matches position preceded by pattern.", 
         testString: "applepie",
         details: [{ part: "(?<=...)", meaning: "Positive Lookbehind" }]
@@ -273,7 +273,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Negative Lookbehind", 
         regex: "(?<!apple)", 
-        dsl: "{ \"lookaround\": { \"type\": \"negativeLookbehind\", \"pattern\": [{ \"literal\": \"apple\" }] } }", 
+        dsl: "{ \"lookaround\": { \"type\": \"negativeLookbehind\", \"pattern\": [\"apple\"] } }", 
         description: "Matches position NOT preceded by pattern.", 
         testString: "cherrypie",
         details: [{ part: "(?<!...)", meaning: "Negative Lookbehind" }]
@@ -286,7 +286,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Alternation (OR)", 
         regex: "cat|dog", 
-        dsl: "{ \"choice\": [ [{ \"literal\": \"cat\" }], [{ \"literal\": \"dog\" }] ] }", 
+        dsl: "{ \"choice\": [ [\"cat\"], [\"dog\"] ] }", 
         description: "Matches either pattern.", 
         testString: "cat dog",
         details: [{ part: "|", meaning: "Choice/OR operator" }]
@@ -294,7 +294,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Capturing Group", 
         regex: "(abc)", 
-        dsl: "{ \"capture\": { \"pattern\": [{ \"literal\": \"abc\" }] } }", 
+        dsl: "{ \"capture\": { \"pattern\": [\"abc\"] } }", 
         description: "Groups pattern and creates a capture group.", 
         testString: "abcabc",
         details: [{ part: "(...)", meaning: "Capturing group" }]
@@ -302,7 +302,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Named Capturing Group", 
         regex: "(?<year>\\d{4})", 
-        dsl: "{ \"capture\": { \"name\": \"year\", \"pattern\": [{ \"repeat\": { \"type\": \"digit\", \"count\": 4 } }] } }", 
+        dsl: "{ \"capture\": { \"name\": \"year\", \"pattern\": [{ \"repeat\": { \"type\": \"digit\" }, \"count\": 4 }] } }", 
         description: "Groups pattern and gives it a name.", 
         testString: "2024-04-28",
         details: [{ part: "(?<name>...)", meaning: "Named capturing group" }]
@@ -310,7 +310,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Non-Capturing Group", 
         regex: "(?:abc)", 
-        dsl: "{ \"group\": { \"pattern\": [{ \"literal\": \"abc\" }] } }", 
+        dsl: "{ \"group\": { \"pattern\": [\"abc\"] } }", 
         description: "Groups without capturing.", 
         testString: "abcabc",
         details: [{ part: "(?:...)", meaning: "Non-capturing group" }]

@@ -107,20 +107,13 @@ function compileNode(node: any): string {
     return `\\${exclude ? "P" : "p"}{${property}}`;
   }
 
-  if ("startOfLine" in node && node.startOfLine) {
-    return "^";
-  }
-
-  if ("endOfLine" in node && node.endOfLine) {
-    return "$";
-  }
-
-  if ("wordBoundary" in node && node.wordBoundary) {
-    return "\\b";
-  }
-
-  if ("nonWordBoundary" in node && node.nonWordBoundary) {
-    return "\\B";
+  if ("$" in node) {
+    switch (node.$) {
+      case "start": return "^";
+      case "end": return "$";
+      case "boundary": return "\\b";
+      case "notBoundary": return "\\B";
+    }
   }
 
   if ("choice" in node) {

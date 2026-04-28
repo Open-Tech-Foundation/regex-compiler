@@ -6,7 +6,7 @@ export const EXAMPLE_REGISTRY = [
     features: ["Quantifiers", "Literal Matching"],
     dsl: {
       nodes: [
-        { startOfLine: true },
+        { "$": "start" },
         "+",
         { repeat: { type: "digit" }, min: 1, max: 3 },
         " ",
@@ -15,7 +15,7 @@ export const EXAMPLE_REGISTRY = [
         { repeat: { type: "digit" }, count: 3 },
         " ",
         { repeat: { type: "digit" }, count: 4 },
-        { endOfLine: true }
+        { "$": "end" }
       ]
     },
     testCases: [
@@ -32,7 +32,7 @@ export const EXAMPLE_REGISTRY = [
     features: ["Character Sets", "Quantifiers"],
     dsl: {
       nodes: [
-        { startOfLine: true },
+        { "$": "start" },
         { capture: { name: "user", pattern: [{ repeat: { charSet: { chars: "a-zA-Z0-9._%+-", exclude: false } }, oneOrMore: true }] } },
         "@",
         { 
@@ -50,7 +50,7 @@ export const EXAMPLE_REGISTRY = [
           ],
           count: 1
         },
-        { endOfLine: true }
+        { "$": "end" }
       ],
       flags: { ignoreCase: true }
     },
@@ -69,11 +69,11 @@ export const EXAMPLE_REGISTRY = [
     features: ["Lookarounds", "Quantifiers"],
     dsl: {
       nodes: [
-        { startOfLine: true },
+        { "$": "start" },
         { lookaround: { type: "positiveLookahead", pattern: [{ repeat: { type: "any" }, zeroOrMore: true }, { repeat: { type: "digit" }, count: 1 }] } },
         { lookaround: { type: "positiveLookahead", pattern: [{ repeat: { type: "any" }, zeroOrMore: true }, { charSet: { chars: "a-zA-Z" } }] } },
         { repeat: { type: "any" }, min: 8 },
-        { endOfLine: true }
+        { "$": "end" }
       ]
     },
     testCases: [

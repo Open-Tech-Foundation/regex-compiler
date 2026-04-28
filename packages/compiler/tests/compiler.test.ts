@@ -174,13 +174,13 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
   test("Email Validator", () => {
     const dsl = {
       nodes: [
-        { startOfLine: true },
+        { "$": "start" },
         { capture: { name: "user", pattern: [{ repeat: { charSet: { chars: "a-zA-Z0-9._%+-", exclude: false } }, oneOrMore: true }] } },
         "@",
         { capture: { name: "domain", pattern: [{ repeat: { charSet: { chars: "a-zA-Z0-9.-", exclude: false } }, oneOrMore: true }] } },
         ".",
         { capture: { name: "tld", pattern: [{ repeat: { charSet: { chars: "a-zA-Z", exclude: false } }, min: 2 }] } },
-        { endOfLine: true }
+        { "$": "end" }
       ],
       flags: { ignoreCase: true }
     };
