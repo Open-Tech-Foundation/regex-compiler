@@ -35,19 +35,51 @@ npm install @opentf/regex-compiler
 
 ## 🛠 Usage
 
-Explore the library's capabilities:
+Explore the library's capabilities with full TypeScript support:
 
 ### Compiling a Named Capture Group
 
-```javascript
-import { compileToJS } from "@opentf/regex-compiler";
+```typescript
+import { compileToJS, type RegexDSL } from "@opentf/regex-compiler";
 
-const dsl = [
+const dsl: RegexDSL = [
   { capture: { name: "user", pattern: [{ repeat: { type: "word" }, oneOrMore: true }] } }
 ];
 
-const { pattern } = compileToJS(dsl); 
-//=> "(?<user>\\w+)"
+const result = compileToJS(dsl); 
+
+if ('error' in result) {
+  console.error(result.error);
+} else {
+  console.log(result.pattern); //=> "(?<user>\\w+)"
+}
+```
+
+## 🛡️ Validation & Error Handling
+
+The compiler performs deep logical validation. If the DSL is invalid, it returns an object containing an `error` string and a detailed `issues` array.
+
+### Handling Errors
+
+```typescript
+const invalidDSL = [
+  { repeat: "a", oneOrMore: true, count: 5 } // ❌ Conflicting quantifiers
+];
+
+const result = compileToJS(invalidDSL);
+
+if ('error' in result) {
+  console.log(result.error); 
+  //=> "root.0.repeat: Conflicting quantifiers. Use only one of: count, min/max..."
+  
+  console.log(result.issues);
+  /*=> [
+    { 
+      path: "root.0.repeat", 
+      message: "Conflicting quantifiers. Use only one of: count, min/max..." 
+    }
+  ] */
+}
 ```
 
 ## 🚀 DSL Features
