@@ -68,7 +68,7 @@ export default function ReferenceGuide() {
               <div className="space-y-8">
                 {filteredReference.map((cat) => (
                   <div key={cat.category} className="space-y-2">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 px-3 mb-4">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-200 px-3 mb-4">
                       {cat.category}
                     </h3>
                     <div className="space-y-1">
@@ -79,7 +79,7 @@ export default function ReferenceGuide() {
                           className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all flex items-center justify-between group ${
                             activeItem === item
                               ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-lg shadow-blue-500/5'
-                              : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border border-transparent'
+                              : 'text-zinc-300 hover:text-zinc-100 hover:bg-white/[0.03] border border-transparent'
                           }`}
                         >
                           <span className="font-medium truncate pr-2">{item.title}</span>
@@ -87,7 +87,7 @@ export default function ReferenceGuide() {
                             className={`text-[10px] font-mono px-1.5 py-0.5 rounded transition-colors ${
                               activeItem === item
                                 ? 'bg-blue-500/20 text-blue-300'
-                                : 'bg-zinc-800 text-zinc-500 group-hover:text-zinc-400'
+                                : 'bg-zinc-800 text-zinc-400 group-hover:text-zinc-200'
                             }`}
                           >
                             {item.regex}
@@ -116,7 +116,7 @@ export default function ReferenceGuide() {
 
                   <div className="grid gap-8">
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-300">
                         Syntax Preview
                       </label>
                       <div className="bg-[#09090b] border border-zinc-800 rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative overflow-hidden group">
@@ -142,7 +142,7 @@ export default function ReferenceGuide() {
                         </div>
                         <div className="flex items-center gap-6">
                           <div className="shrink-0">
-                            <span className="text-xs text-zinc-500 block mb-2 font-bold uppercase tracking-tighter">
+                            <span className="text-xs text-zinc-300 block mb-2 font-bold uppercase tracking-tighter">
                               Regex
                             </span>
                             <code className="text-3xl text-blue-400 font-mono font-bold leading-none">
@@ -154,7 +154,7 @@ export default function ReferenceGuide() {
                     </div>
 
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-300">
                         DSL Representation
                       </label>
                       <div className="bg-[#09090b] border border-zinc-800 rounded-2xl p-6 relative group">
@@ -178,23 +178,23 @@ export default function ReferenceGuide() {
                             </svg>
                           </button>
                         </div>
-                        <pre className="text-sm text-zinc-300 font-mono overflow-x-auto custom-scrollbar leading-relaxed">
+                        <pre className="text-sm text-zinc-100 font-mono overflow-x-auto custom-scrollbar leading-relaxed">
                           {activeItem.dsl}
                         </pre>
                       </div>
                     </div>
 
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-300">
                         Description
                       </label>
-                      <p className="text-lg text-zinc-400 leading-relaxed font-medium">
+                      <p className="text-lg text-zinc-200 leading-relaxed font-medium">
                         {activeItem.description}
                       </p>
                     </div>
 
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-300">
                         Live Preview
                       </label>
                       <div className="bg-[#09090b] border border-zinc-800 rounded-2xl p-8 relative overflow-hidden group">
@@ -211,7 +211,7 @@ export default function ReferenceGuide() {
                             })()}
                           </span>
                         </div>
-                        <div className="text-xl leading-relaxed font-medium text-zinc-400 whitespace-pre-wrap break-all">
+                        <div className="text-xl leading-relaxed font-medium text-zinc-200 whitespace-pre-wrap break-all">
                           {(() => {
                             const text = activeItem.testString;
                             const regexStr = activeItem.regex;
@@ -249,7 +249,7 @@ export default function ReferenceGuide() {
                     </div>
 
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-300">
                         Detailed Breakdown
                       </label>
                       <div className="space-y-3">
@@ -262,7 +262,7 @@ export default function ReferenceGuide() {
                               {detail.part}
                             </code>
                             <div className="flex-1 pt-1">
-                              <p className="text-sm text-zinc-300 font-medium group-hover/detail:text-white transition-colors">
+                              <p className="text-sm text-zinc-100 font-medium group-hover/detail:text-white transition-colors">
                                 {detail.meaning}
                               </p>
                             </div>

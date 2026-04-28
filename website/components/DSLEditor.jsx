@@ -5,9 +5,9 @@ export default function DSLEditor({ value, error, issues, onChange, onOpenLibrar
     <div
       className={`w-full h-full flex flex-col overflow-hidden transition-colors duration-500 ${error ? 'bg-red-500/[0.02]' : ''}`}
     >
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[#27272a] bg-[#0c0c0e]/50 shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#27272a] bg-[#121214] shrink-0">
         <div className="flex items-center gap-3">
-          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
+          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-200">
             DSL Editor
           </h2>
           {error ? (

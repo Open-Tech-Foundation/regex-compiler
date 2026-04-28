@@ -11,7 +11,7 @@ export default function TestBench({
     <div className="grid grid-cols-1 gap-6">
       {/* Manual Test */}
       <section className="space-y-3">
-        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
+        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-200">
           Manual Test Bench
         </h2>
         <div className="relative">
@@ -33,10 +33,10 @@ export default function TestBench({
       {/* Predefined Suite */}
       <section>
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-200">
             Predefined Test Suite
           </h2>
-          <span className="text-[11px] font-black text-zinc-300 uppercase tracking-widest bg-zinc-800/80 px-3 py-1 rounded-lg border border-zinc-700/50">
+          <span className="text-[11px] font-black text-zinc-100 uppercase tracking-widest bg-zinc-800 px-3 py-1 rounded-lg border border-zinc-600">
             {passedCount} / {testResults.length} Passed
           </span>
         </div>

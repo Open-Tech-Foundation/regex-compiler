@@ -9,7 +9,7 @@ export default function CompilationPreview({
     <section>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
             Compiled Output
           </h2>
           {isCompiling && (
@@ -22,7 +22,7 @@ export default function CompilationPreview({
           <div className="w-4 h-4 bg-[#f7df1e] text-black flex items-center justify-center font-bold text-[8px] rounded-sm shrink-0">
             JS
           </div>
-          <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-zinc-100 uppercase tracking-wider">
             JavaScript
           </span>
         </div>

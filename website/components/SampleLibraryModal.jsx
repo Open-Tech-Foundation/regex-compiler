@@ -14,14 +14,14 @@ export default function SampleLibraryModal({ isOpen, onClose, onLoadExample }) {
             <h4 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors mb-2">
               {ex.title}
             </h4>
-            <p className="text-sm text-zinc-400 line-clamp-2 leading-relaxed mb-4">
+            <p className="text-sm text-zinc-200 line-clamp-2 leading-relaxed mb-4">
               {ex.description}
             </p>
             <div className="flex flex-wrap gap-2">
               {ex.features.map((feat, fIdx) => (
                 <span
                   key={fIdx}
-                  className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-400 uppercase tracking-tight"
+                  className="px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-500/40 text-[10px] font-bold text-purple-200 uppercase tracking-tight"
                 >
                   {feat}
                 </span>
