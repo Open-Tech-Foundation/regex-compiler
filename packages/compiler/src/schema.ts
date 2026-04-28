@@ -27,7 +27,7 @@ export const FlagsSchema = z.object({
 // Advanced CharSet Operations (v flag support)
 export const CharSetSchema: z.ZodType<any> = z.lazy(() =>
   z.union([
-    z.object({ chars: z.string(), exclude: z.boolean().optional() }),
+    z.object({ chars: z.string().min(1), exclude: z.boolean().optional() }),
     z.object({ intersection: z.array(CharSetSchema).min(2) }),
     z.object({ subtraction: z.object({ left: CharSetSchema, right: CharSetSchema }) }),
   ]),
@@ -43,7 +43,7 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
     z.object({ charSet: CharSetSchema }),
     z
       .object({
-        repeat: z.union([RegexNodeSchema, z.array(RegexNodeSchema)]),
+        repeat: z.union([RegexNodeSchema, z.array(RegexNodeSchema).min(1)]),
         count: z.number().int().nonnegative().optional(),
         min: z.number().int().nonnegative().optional(),
         max: z.number().int().nonnegative().optional(),
@@ -64,10 +64,10 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
           path: ['min'],
         },
       ),
-    z.object({ choice: z.array(z.array(RegexNodeSchema).min(1)).min(1) }),
+    z.object({ choice: z.array(z.array(RegexNodeSchema).min(1)).min(2) }),
     z.object({
       capture: z.object({
-        name: z.string().optional(),
+        name: z.string().min(1).optional(),
         pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema).min(1)]),
       }),
     }),
@@ -85,13 +85,14 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
           'positiveLookbehind',
           'negativeLookbehind',
         ]),
-        pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema)]),
+        pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema).min(1)]),
       }),
     }),
     z.object({ backreference: z.union([z.string(), z.number()]) }),
     z.object({
       unicodeProperty: z.object({
         property: z.string(),
+        value: z.string().optional(),
         exclude: z.boolean().optional(),
       }),
     }),
