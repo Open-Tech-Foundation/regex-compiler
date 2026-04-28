@@ -267,87 +267,171 @@ export function validateDSL(input: any): ValidationResult {
   const issues: { path: string; message: string }[] = [];
 
   if (!result.success) {
-    function findDeepestError(issue: any): any {
+    function flattenIssues(issue: any): any[] {
       if (issue.code === 'invalid_union' && issue.errors) {
-        let deepest = issue;
-        let deepestPath = issue.path || [];
-        for (const issuesArray of issue.errors) {
-          for (const subIssue of Array.isArray(issuesArray) ? issuesArray : issuesArray.issues || []) {
-            const deeper = findDeepestError(subIssue);
-            let combinedPath = deeper.path || [];
-            if (issue.path && issue.path.length > 0 && (combinedPath.length === 0 || combinedPath[0] !== issue.path[0])) {
-               combinedPath = [...issue.path, ...combinedPath];
-            }
-            if (combinedPath.length > deepestPath.length) {
-              deepest = deeper;
-              deepestPath = combinedPath;
-            }
-          }
-        }
-        return { ...deepest, path: deepestPath };
+        return issue.errors.flatMap((issuesArray: any) => 
+          (Array.isArray(issuesArray) ? issuesArray : issuesArray.issues || []).flatMap((subIssue: any) => {
+            const flattened = flattenIssues(subIssue);
+            return flattened.map(f => {
+              let combinedPath = f.path || [];
+              if (issue.path && issue.path.length > 0 && (combinedPath.length === 0 || combinedPath[0] !== issue.path[0])) {
+                combinedPath = [...issue.path, ...combinedPath];
+              }
+              return { ...f, path: combinedPath };
+            });
+          })
+        );
       }
-      return issue;
+      return [issue];
     }
 
-    result.error.issues.forEach((e) => {
-      const deepest = findDeepestError(e);
+    const allIssues = result.error.issues.flatMap(flattenIssues);
+    const unrecognizedNodes = new Set<string>();
+
+    allIssues.forEach((deepest) => {
       let pathParts = deepest.path || [];
-      
-      let message = deepest.message;
 
       let node: any = input;
       let objectPathParts = [];
+      let lastValidNode = node;
       for (const p of pathParts) {
         if (node && typeof node === 'object' && p in node) {
           node = node[p];
           objectPathParts.push(p);
+          lastValidNode = node;
         } else if (Array.isArray(node) && typeof p === 'number' && node[p] !== undefined) {
           node = node[p];
           objectPathParts.push(p);
+          lastValidNode = node;
         } else {
           break;
         }
       }
 
-      // If we reached a primitive, back up one level to its parent object
-      // so we can check if that parent object is unrecognized
-      if (typeof node !== 'object' || node === null) {
-        node = input;
-        objectPathParts.pop();
-        for (const p of objectPathParts) {
-          node = node[p];
-        }
-      }
+      const validKeys = [
+        'type', 'hex', 'unicode', 'charSet', 'unicodeProperty', '$', 
+        'or', 'capture', 'group', 'lookaround', 'backreference', 
+        'repeat', 'pattern'
+      ];
 
       let isUnrecognized = false;
-      if (node && typeof node === 'object' && !('flags' in node) && !Array.isArray(node)) {
-        const validKeys = [
-          'type', 'hex', 'unicode', 'charSet', 'unicodeProperty', '$', 
-          'or', 'capture', 'group', 'lookaround', 'backreference', 
-          'repeat', 'pattern'
-        ];
-        const nodeKeys = Object.keys(node);
-        if (nodeKeys.length > 0 && !nodeKeys.some(k => validKeys.includes(k))) {
+      let hasMultipleKeys = false;
+      let presentValidKeys: string[] = [];
+
+      let lastNonNumericKey = null;
+      for (let i = objectPathParts.length - 1; i >= 0; i--) {
+        if (typeof objectPathParts[i] === 'string' && isNaN(parseInt(objectPathParts[i] as string))) {
+          lastNonNumericKey = objectPathParts[i];
+          break;
+        }
+      }
+      const isRegexNodeContext = !lastNonNumericKey || ['pattern', 'repeat', 'or'].includes(lastNonNumericKey as string);
+
+      if (isRegexNodeContext && lastValidNode && typeof lastValidNode === 'object' && !('flags' in lastValidNode) && !Array.isArray(lastValidNode)) {
+        const nodeKeys = Object.keys(lastValidNode);
+        presentValidKeys = nodeKeys.filter(k => validKeys.includes(k));
+        
+        if (presentValidKeys.length === 0) {
           isUnrecognized = true;
+        } else if (presentValidKeys.length > 1) {
+          hasMultipleKeys = true;
         }
       }
 
-      let path = (isUnrecognized ? objectPathParts : pathParts).join('.');
+      let path = pathParts.join('.');
       path = path.length > 0 ? `root.${path}` : 'root';
 
-      if (isUnrecognized) {
-        const nodeKeys = Object.keys(node);
-        message = `Unrecognized or invalid node structure. Found keys: ${nodeKeys.join(', ')}`;
-        
-        // Specifically for edgeCases.test.ts, we append the path but with a space 
-        // to not break the string matching prefix logic that tests expect
-        message = `${message} at ${path}`;
-      } else {
-        message = `${deepest.message} at ${path}`;
+      if (hasMultipleKeys) {
+        const basePath = objectPathParts.join('.');
+        const fullBasePath = basePath.length > 0 ? `root.${basePath}` : 'root';
+        if (!unrecognizedNodes.has(fullBasePath)) {
+          unrecognizedNodes.add(fullBasePath);
+          issues.push({ path: fullBasePath, message: `Multiple structural keys found: ${presentValidKeys.join(', ')}. A regex node can only have one structural key.` });
+        }
+        return; // Skip other errors for this invalid node
       }
 
+      if (isUnrecognized) {
+        const basePath = objectPathParts.join('.');
+        const fullBasePath = basePath.length > 0 ? `root.${basePath}` : 'root';
+        if (!unrecognizedNodes.has(fullBasePath)) {
+          unrecognizedNodes.add(fullBasePath);
+          const nodeKeys = Object.keys(lastValidNode);
+          const knownPropertyKeys = ['count', 'min', 'max', 'optional', 'oneOrMore', 'zeroOrMore', 'lazy', 'name', 'flags'];
+          const trulyInvalidKeys = nodeKeys.filter(k => !validKeys.includes(k) && !knownPropertyKeys.includes(k));
+          
+          if (trulyInvalidKeys.length > 0) {
+            const keysStr = trulyInvalidKeys.map(k => `"${k}"`).join(', ');
+            const msg = `Unrecognized key${trulyInvalidKeys.length > 1 ? 's' : ''}: ${keysStr}`;
+            issues.push({ path: fullBasePath, message: msg });
+          } else {
+            issues.push({ path: fullBasePath, message: `Unrecognized or invalid node structure` });
+          }
+        }
+        
+        if (deepest.code === 'unrecognized_keys') {
+          return; // Skip redundant Zod unrecognized_keys errors since we just logged the structural error
+        }
+
+        if (objectPathParts.length < pathParts.length) {
+           return; // Skip missing sub-keys on unrecognized nodes
+        }
+      }
+
+      // Filter union noise: missing discriminant keys
+      if (objectPathParts.length < pathParts.length) {
+        const missingKey = pathParts[objectPathParts.length];
+        if (lastValidNode && typeof lastValidNode === 'object' && !Array.isArray(lastValidNode)) {
+          if ([...validKeys, 'flags'].includes(missingKey as string)) {
+             return; // Skip union noise
+          }
+        }
+      }
+
+      // Filter union noise: branch complains about unrecognized keys that are actually valid structural keys
+      if (deepest.code === 'unrecognized_keys' && deepest.keys) {
+        const complainsAboutValidKey = deepest.keys.some((k: string) => validKeys.includes(k) || k === 'flags');
+        if (complainsAboutValidKey) {
+          return; // This is from a branch that doesn't expect the key the user provided
+        }
+      }
+
+      const message = `${deepest.message}`;
       issues.push({ path, message });
     });
+  }
+
+  // Filter and deduplicate issues
+  if (issues.length > 0) {
+    let filtered = [];
+    const seen = new Set();
+    for (const issue of issues) {
+      const key = `${issue.path}|${issue.message}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        filtered.push(issue);
+      }
+    }
+
+    const hasDeeperIssues = filtered.some((i) => i.path !== 'root');
+    if (hasDeeperIssues) {
+      // Drop all 'root' issues that are just generic type mismatches from other union branches
+      filtered = filtered.filter((i) => !(i.path === 'root' && i.message.includes('Invalid input: expected')));
+    }
+
+    // Drop generic type mismatches if there's a more specific error at the exact same path or a child path
+    filtered = filtered.filter((i) => {
+      if (i.message.includes('Invalid input: expected')) {
+        const hasSpecificErrorAtOrBelowPath = filtered.some(
+          (other) => (other.path === i.path || other.path.startsWith(i.path + '.')) && !other.message.includes('Invalid input: expected')
+        );
+        return !hasSpecificErrorAtOrBelowPath;
+      }
+      return true;
+    });
+
+    issues.length = 0;
+    issues.push(...filtered);
   }
 
   if (result.success) {

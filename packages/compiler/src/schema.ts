@@ -37,10 +37,10 @@ export const CharSetSchema: z.ZodType<any> = z.lazy(() =>
 export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
   z.union([
     z.string(),
-    z.object({ type: CharClassSchema }),
-    z.object({ hex: z.string().regex(/^[0-9a-fA-F]{2}$/, 'Must be 2 hex digits') }),
-    z.object({ unicode: z.string().regex(/^[0-9a-fA-F]{4,5}$/, 'Must be 4-5 hex digits') }),
-    z.object({ charSet: CharSetSchema }),
+    z.object({ type: CharClassSchema }).strict(),
+    z.object({ hex: z.string().regex(/^[0-9a-fA-F]{2}$/, 'Must be 2 hex digits') }).strict(),
+    z.object({ unicode: z.string().regex(/^[0-9a-fA-F]{4,5}$/, 'Must be 4-5 hex digits') }).strict(),
+    z.object({ charSet: CharSetSchema }).strict(),
     z
       .object({
         repeat: z.union([RegexNodeSchema, z.array(RegexNodeSchema).min(1)]),
@@ -51,7 +51,7 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
         oneOrMore: z.boolean().optional(),
         zeroOrMore: z.boolean().optional(),
         lazy: z.boolean().optional(),
-      })
+      }).strict()
       .refine(
         (data) => {
           const quantifiers = ['count', 'min', 'max', 'optional', 'oneOrMore', 'zeroOrMore'];
@@ -84,19 +84,19 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
           path: ['min'],
         },
       ),
-    z.object({ or: z.array(z.array(RegexNodeSchema).min(1)).min(2) }),
+    z.object({ or: z.array(z.array(RegexNodeSchema).min(1)).min(2) }).strict(),
     z.object({
       capture: z.object({
         name: z.string().min(1).optional(),
         pattern: z.array(RegexNodeSchema).min(1),
-      }),
-    }),
+      }).strict(),
+    }).strict(),
     z.object({
       group: z.object({
         pattern: z.array(RegexNodeSchema).min(1),
-      }),
-    }),
-    z.object({ $: z.enum(['start', 'end', 'boundary', 'notBoundary']) }),
+      }).strict(),
+    }).strict(),
+    z.object({ $: z.enum(['start', 'end', 'boundary', 'notBoundary']) }).strict(),
     z.object({
       lookaround: z.object({
         type: z.enum([
@@ -106,16 +106,16 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
           'negativeLookbehind',
         ]),
         pattern: z.array(RegexNodeSchema).min(1),
-      }),
-    }),
-    z.object({ backreference: z.union([z.string(), z.number()]) }),
+      }).strict(),
+    }).strict(),
+    z.object({ backreference: z.union([z.string(), z.number()]) }).strict(),
     z.object({
       unicodeProperty: z.object({
         property: z.string(),
         value: z.string().optional(),
         exclude: z.boolean().optional(),
-      }),
-    }),
+      }).strict(),
+    }).strict(),
   ]),
 );
 

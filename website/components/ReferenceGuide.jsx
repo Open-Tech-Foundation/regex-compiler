@@ -2,9 +2,9 @@ import Modal from './Modal';
 import { REFERENCE_DATA } from '../data/reference';
 
 export default function ReferenceGuide() {
-  const isOpen = $state(false);
-  const searchQuery = $state('');
-  const selectedItem = $state(null);
+  let isOpen = $state(false);
+  let searchQuery = $state('');
+  let selectedItem = $state(null);
 
   const filteredReference = $derived(() => {
     if (!searchQuery) return REFERENCE_DATA;

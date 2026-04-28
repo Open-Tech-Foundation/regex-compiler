@@ -11,7 +11,7 @@
   "dependencies": {
     "@opentf/regex-compiler": "workspace:*",
     "@opentf/web": "^0.3.0",
-    "lucide-static": "^1.11.0",
+    "jsonc-parser": "^3.3.1",
     "monaco-editor": "^0.55.1"
   },
   "devDependencies": {

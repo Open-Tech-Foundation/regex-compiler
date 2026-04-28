@@ -120,9 +120,7 @@ describe('Regex Compiler - Edge Cases & Bug Fixes', () => {
     const dsl = [{ unknownNode: true }];
     const result = compileToJS(dsl) as any;
     expect(result.error).toBeDefined();
-    expect(result.error).toContain(
-      'root.0: Unrecognized or invalid node structure. Found keys: unknownNode',
-    );
+    expect(result.error).toContain('Unrecognized key: "unknownNode"');
   });
 
   test('count: 0 should generate {0}', () => {

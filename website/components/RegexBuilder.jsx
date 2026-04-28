@@ -12,12 +12,14 @@ export default function RegexBuilder() {
   let manualTestString = $state('');
   let isLibraryOpen = $state(false);
   let isCopied = $state(false);
+  let isLinkCopied = $state(false);
   let workerResult = $state(null);
   let isCompiling = $state(false);
 
   // Persistent Worker Reference
   let worker = $state(null);
 
+  // Worker Initialization
   $effect(() => {
     const w = new CompilerWorker();
     
@@ -37,16 +39,53 @@ export default function RegexBuilder() {
     });
   });
 
+  // Handle Hash Sync (Initial load)
   $effect(() => {
-    try {
-      const dsl = JSON.parse(dslText);
-      if (worker) {
-        isCompiling = true;
-        worker.postMessage({
-          dsl,
-          testCases: selectedExample.testCases,
-        });
+    const hash = window.location.hash;
+    if (hash.startsWith('#dsl=')) {
+      try {
+        const content = hash.replace('#dsl=', '');
+        const [encodedDsl, query] = content.split('&');
+        
+        const decodedDsl = decodeURIComponent(atob(encodedDsl));
+        if (decodedDsl !== dslText) {
+          dslText = decodedDsl;
+        }
+
+        if (query) {
+          const searchParams = new URLSearchParams(query);
+          if (searchParams.has('test')) {
+            const testVal = decodeURIComponent(searchParams.get('test'));
+            if (testVal !== manualTestString) {
+              manualTestString = testVal;
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse DSL from URL', e);
       }
+    }
+  });
+
+  // Compile Trigger (Depends on dslText and worker)
+  $effect(() => {
+    if (!worker) return;
+    
+    // Explicitly track dependencies for the framework
+    const currentDslText = dslText;
+    const currentManualTest = manualTestString;
+    
+    try {
+      const dsl = JSON.parse(currentDslText);
+      isCompiling = true;
+      
+      // Determine test cases to run
+      // If we are on a custom/shared dsl, we can't use the 'selectedExample' test cases reliably
+      // But for now we pass the current manual test if we want to update the summary
+      worker.postMessage({
+        dsl,
+        testCases: selectedExample.testCases,
+      });
     } catch (e) {
       workerResult = { error: 'Invalid JSON format' };
       isCompiling = false;
@@ -65,11 +104,14 @@ export default function RegexBuilder() {
   const passedCount = $derived(() => (workerResult ? workerResult.passedCount : 0));
 
   const manualMatch = $derived(() => {
-    if (!workerResult || workerResult.error) return false;
+    const res = workerResult;
+    const testStr = manualTestString;
+    
+    if (!res || res.error || !('pattern' in res)) return false;
     try {
-      const re = new RegExp(workerResult.pattern, workerResult.flags);
+      const re = new RegExp(res.pattern, res.flags);
       re.lastIndex = 0;
-      return re.test(manualTestString);
+      return re.test(testStr);
     } catch (e) {
       return false;
     }
@@ -87,6 +129,22 @@ export default function RegexBuilder() {
     navigator.clipboard.writeText(compiledRegex);
     isCopied = true;
     setTimeout(() => (isCopied = false), 2000);
+  };
+
+  const copyLinkToClipboard = () => {
+    try {
+      const encodedDsl = btoa(encodeURIComponent(dslText));
+      const testParam = manualTestString ? `&test=${encodeURIComponent(manualTestString)}` : '';
+      const shareHash = `#dsl=${encodedDsl}${testParam}`;
+      const shareUrl = `${window.location.origin}${window.location.pathname}${shareHash}`;
+      
+      navigator.clipboard.writeText(shareUrl);
+      
+      isLinkCopied = true;
+      setTimeout(() => (isLinkCopied = false), 2000);
+    } catch (e) {
+      console.error('Failed to generate share link', e);
+    }
   };
 
   const resetDSL = () => {
@@ -116,6 +174,8 @@ export default function RegexBuilder() {
             isCopied={isCopied}
             isCompiling={isCompiling}
             onCopy={copyToClipboard}
+            onCopyLink={copyLinkToClipboard}
+            isLinkCopied={isLinkCopied}
           />
 
           <TestBench

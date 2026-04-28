@@ -4,6 +4,8 @@ export default function CompilationPreview({
   isCopied,
   isCompiling,
   onCopy,
+  onCopyLink,
+  isLinkCopied,
 }) {
   return (
     <section>
@@ -18,13 +20,40 @@ export default function CompilationPreview({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-[#09090b] border border-[#27272a] rounded-lg cursor-default opacity-80 shadow-sm">
-          <div className="w-4 h-4 bg-[#f7df1e] text-black flex items-center justify-center font-bold text-[8px] rounded-sm shrink-0">
-            JS
+        <div className="flex items-center gap-3">
+          <button
+            onclick={onCopyLink}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-[10px] font-bold uppercase tracking-wider cursor-pointer ${
+              isLinkCopied
+                ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                : 'bg-zinc-900 border-[#27272a] text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+            }`}
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="14" 
+              height="14" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              stroke-width="2" 
+              stroke-linecap="round" 
+              stroke-linejoin="round"
+              className="lucide lucide-link"
+            >
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            {isLinkCopied ? 'Link Copied!' : 'Copy Share Link'}
+          </button>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-[#09090b] border border-[#27272a] rounded-lg cursor-default opacity-80 shadow-sm">
+            <div className="w-4 h-4 bg-[#f7df1e] text-black flex items-center justify-center font-bold text-[8px] rounded-sm shrink-0">
+              JS
+            </div>
+            <span className="text-[10px] font-bold text-zinc-100 uppercase tracking-wider">
+              JavaScript
+            </span>
           </div>
-          <span className="text-[10px] font-bold text-zinc-100 uppercase tracking-wider">
-            JavaScript
-          </span>
         </div>
       </div>
       <div
@@ -32,18 +61,21 @@ export default function CompilationPreview({
       >
         {result && result.error ? (
           <div className="flex items-start gap-4 text-red-400">
-            <svg
-              className="w-5 h-5 shrink-0 mt-0.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="20" 
+              height="20" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              stroke-width="2" 
+              stroke-linecap="round" 
+              stroke-linejoin="round"
+              className="lucide lucide-alert-circle shrink-0 mt-0.5"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
             </svg>
             <p className="font-mono text-sm leading-relaxed">{result.error}</p>
           </div>
@@ -59,13 +91,20 @@ export default function CompilationPreview({
               {isCopied ? (
                 <span className="text-[10px] font-bold uppercase tracking-wider">Copied!</span>
               ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                  />
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  stroke-width="2" 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round"
+                  className="lucide lucide-copy"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                 </svg>
               )}
             </button>
