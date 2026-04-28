@@ -68,67 +68,45 @@ Any plain string is automatically treated as an escaped literal.
 - **Strings** = Literals (e.g., `"digit"` matches the word "digit").
 - **`{ type: "..." }`** = Keywords (e.g., `{ type: "digit" }` matches `\d`).
 
-### 3. Flattened Quantifiers
-No more nesting quantifiers inside a `type` key.
+### 3. Inline Flags
+Declare your flags anywhere in the array.
 ```json
-{
-  "repeat": { "type": "digit" },
-  "min": 1,
-  "max": 3
-}
+[
+  "hello",
+  { "flags": { "ignoreCase": true } }
+]
 ```
 
 ## 📝 Email Validator Example
 
+The ultimate "Zero-Wrapper" experience:
+
 ```json
-{
-  "nodes": [
-    { "$": "start" },
-    { 
-      "capture": { 
-        "name": "user", 
-        "pattern": [
-          { 
-            "repeat": { 
-              "charSet": { "chars": "a-z0-9._%+-", "exclude": false } 
-            }, 
-            "oneOrMore": true 
-          }
-        ] 
-      } 
-    },
-    "@",
-    { 
-      "capture": { 
-        "name": "domain", 
-        "pattern": [
-          { 
-            "repeat": { 
-              "charSet": { "chars": "a-z0-9-", "exclude": false } 
-            }, 
-            "oneOrMore": true 
-          }
-        ] 
-      } 
-    },
-    ".",
-    { 
-      "capture": { 
-        "name": "tld", 
-        "pattern": [
-          { 
-            "repeat": { 
-              "charSet": { "chars": "a-z", "exclude": false } 
-            }, 
-            "min": 2 
-          }
-        ] 
-      } 
-    },
-    { "$": "end" }
-  ],
-  "flags": { "ignoreCase": true }
-}
+[
+  { "$": "start" },
+  { 
+    "capture": { 
+      "name": "user", 
+      "pattern": [{ "repeat": { "charSet": { "chars": "a-z0-9._%+-", "exclude": false } }, "oneOrMore": true }] 
+    } 
+  },
+  "@",
+  { 
+    "capture": { 
+      "name": "domain", 
+      "pattern": [{ "repeat": { "charSet": { "chars": "a-z0-9-", "exclude": false } }, "oneOrMore": true }] 
+    } 
+  },
+  ".",
+  { 
+    "capture": { 
+      "name": "tld", 
+      "pattern": [{ "repeat": { "charSet": { "chars": "a-z", "exclude": false } }, "min": 2 }] 
+    } 
+  },
+  { "$": "end" },
+  { "flags": { "ignoreCase": true } }
+]
 ```
 
 

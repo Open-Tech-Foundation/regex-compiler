@@ -201,21 +201,67 @@ export function validateDSL(input: any): ValidationResult {
   const issues: { path: string; message: string }[] = [];
 
   if (!result.success) {
-    issues.push(...result.error.issues.map(e => {
+    // If we have a top-level union error, try to find errors within array items
+    const flattened = result.error.flatten();
+    
+    result.error.issues.forEach(e => {
       let message = e.message;
-      if (message === "Invalid input" && e.path[0] === "nodes" && e.path.length === 2) {
-        const node = input.nodes[e.path[1] as number];
-        if (node && typeof node === 'object') {
-          const keys = Object.keys(node);
-          message = `Unrecognized or invalid node structure. Found keys: ${keys.join(", ")}`;
+      let path = e.path.join(".");
+
+      // Deep search for unrecognized nodes in arrays
+      function findDeepestError(issue: any): any {
+        if (issue.code === "invalid_union" && issue.errors) {
+          for (const issuesArray of issue.errors) {
+            // issuesArray is an array of issues for one union branch
+            for (const subIssue of (Array.isArray(issuesArray) ? issuesArray : (issuesArray.issues || []))) {
+              const deeper = findDeepestError(subIssue);
+              if (deeper) return deeper;
+            }
+          }
+        }
+        if (issue.path && issue.path.length > 0 && typeof issue.path[issue.path.length - 1] === 'number') {
+          return issue;
+        }
+        return null;
+      }
+
+      const deepest = findDeepestError(e);
+      if (deepest) {
+        const idx = deepest.path[0];
+        const body = Array.isArray(input) ? input : (input.pattern || input.nodes || []);
+        const node = body[idx];
+        if (node && typeof node === 'object' && !('flags' in node)) {
+          message = `Unrecognized or invalid node structure. Found keys: ${Object.keys(node).join(", ")}`;
+          path = `root.${idx}`;
         }
       }
-      return { path: e.path.join("."), message };
-    }));
+
+      // If it's still just "Invalid input", try a simpler path check
+      if (message === "Invalid input" && e.path.length > 0) {
+        path = e.path.join(".");
+      }
+      
+      issues.push({ path, message });
+    });
   }
 
   // Second pass: Logical validation (backreferences, duplicate names, etc.)
-  if (input && Array.isArray(input.nodes)) {
+  if (result.success) {
+    const data = result.data;
+    let nodesToWalk: any[] = [];
+    if (Array.isArray(data)) {
+      nodesToWalk = data;
+    } else if (typeof data === 'string') {
+      nodesToWalk = [data];
+    } else if (typeof data === 'object') {
+      if ('pattern' in data) {
+        nodesToWalk = Array.isArray(data.pattern) ? data.pattern : [data.pattern];
+      } else {
+        const { flags, ...node } = data;
+        nodesToWalk = [node];
+      }
+    }
+
     const names = new Set<string>();
     let totalCaptures = 0;
 
@@ -258,8 +304,8 @@ export function validateDSL(input: any): ValidationResult {
       });
     }
 
-    walk(input.nodes, "nodes", 1); // Pass 1: Collect
-    walk(input.nodes, "nodes", 2); // Pass 2: Verify
+    walk(nodesToWalk, "root", 1); 
+    walk(nodesToWalk, "root", 2); 
   }
 
   if (issues.length > 0) {
@@ -285,7 +331,35 @@ export function compileToJS(input: any): CompiledRegex | { error: string; issues
     };
   }
 
-  const { nodes, flags } = validation.data;
+  const data = validation.data;
+  let nodes: any[] = [];
+  let flags: Flags = {};
+
+  if (Array.isArray(data)) {
+    // Zero-wrapper array form
+    data.forEach(item => {
+      if (typeof item === 'object' && item !== null && 'flags' in item) {
+        flags = { ...flags, ...item.flags };
+      } else {
+        nodes.push(item);
+      }
+    });
+  } else if (typeof data === 'string') {
+    // Direct string form
+    nodes = [data];
+  } else if (typeof data === 'object') {
+    // Explicit pattern form or single node form
+    if ('pattern' in data) {
+      nodes = Array.isArray(data.pattern) ? data.pattern : [data.pattern];
+      flags = data.flags || {};
+    } else {
+      // It's a single node that might have flags intersection
+      const { flags: nodeFlags, ...node } = data;
+      nodes = [node];
+      flags = nodeFlags || {};
+    }
+  }
+
   const pattern = nodes.map(compileNode).join("");
   const flagStr = Object.entries(flags || {})
     .filter(([_, value]) => value)

@@ -5,7 +5,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Any Character", 
         regex: ".", 
-        dsl: "{ \"repeat\": { \"type\": \"any\" }, \"count\": 1 }", 
+        dsl: "{ \"type\": \"any\" }", 
         description: "Matches any character except line breaks.",
         testString: "glib jocks vex dwarves!",
         details: [{ part: ".", meaning: "Any character (except newline)" }]
@@ -58,7 +58,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Digit", 
         regex: "\\d", 
-        dsl: "{ \"repeat\": { \"type\": \"digit\" }, \"count\": 1 }", 
+        dsl: "{ \"type\": \"digit\" }", 
         description: "Matches any digit (0-9).", 
         testString: "Agent 007",
         details: [{ part: "\\d", meaning: "Any digit 0-9" }]
@@ -66,7 +66,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Non-Digit", 
         regex: "\\D", 
-        dsl: "{ \"repeat\": { \"type\": \"nonDigit\" }, \"count\": 1 }", 
+        dsl: "{ \"type\": \"nonDigit\" }", 
         description: "Matches any character that is not a digit.", 
         testString: "Agent 007",
         details: [{ part: "\\D", meaning: "Any character NOT a digit" }]
@@ -74,7 +74,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Word Character", 
         regex: "\\w", 
-        dsl: "{ \"repeat\": { \"type\": \"word\" }, \"count\": 1 }", 
+        dsl: "{ \"type\": \"word\" }", 
         description: "Matches any alphanumeric character plus underscore.", 
         testString: "var_1 = 10",
         details: [{ part: "\\w", meaning: "A-Z, a-z, 0-9, and _" }]
@@ -82,7 +82,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Non-Word Character", 
         regex: "\\W", 
-        dsl: "{ \"repeat\": { \"type\": \"nonWord\" }, \"count\": 1 }", 
+        dsl: "{ \"type\": \"nonWord\" }", 
         description: "Matches any character that is not a word character.", 
         testString: "100%",
         details: [{ part: "\\W", meaning: "Any character NOT a word character" }]
@@ -90,7 +90,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Whitespace", 
         regex: "\\s", 
-        dsl: "{ \"repeat\": { \"type\": \"whitespace\" }, \"count\": 1 }", 
+        dsl: "{ \"type\": \"whitespace\" }", 
         description: "Matches any whitespace character.", 
         testString: "a b\nc",
         details: [{ part: "\\s", meaning: "Space, tab, newline, etc." }]
@@ -98,7 +98,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Non-Whitespace", 
         regex: "\\S", 
-        dsl: "{ \"repeat\": { \"type\": \"nonWhitespace\" }, \"count\": 1 }", 
+        dsl: "{ \"type\": \"nonWhitespace\" }", 
         description: "Matches any character that is not whitespace.", 
         testString: " a ",
         details: [{ part: "\\S", meaning: "Any character NOT whitespace" }]
@@ -106,7 +106,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Newline", 
         regex: "\\n", 
-        dsl: "{ \"repeat\": { \"type\": \"newline\" }, \"count\": 1 }", 
+        dsl: "{ \"type\": \"newline\" }", 
         description: "Matches a line feed character.", 
         testString: "line1\nline2",
         details: [{ part: "\\n", meaning: "Newline character (LF)" }]
@@ -114,7 +114,7 @@ export const REFERENCE_DATA = [
       { 
         title: "Tab", 
         regex: "\\t", 
-        dsl: "{ \"repeat\": { \"type\": \"tab\" }, \"count\": 1 }", 
+        dsl: "{ \"type\": \"tab\" }", 
         description: "Matches a horizontal tab character.", 
         testString: "col1\tcol2",
         details: [{ part: "\\t", meaning: "Tab character" }]

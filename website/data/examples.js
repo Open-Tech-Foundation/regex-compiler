@@ -4,20 +4,18 @@ export const EXAMPLE_REGISTRY = [
     title: "International Phone Number",
     description: "Matches international format phone numbers starting with +, followed by country code and digits.",
     features: ["Quantifiers", "Literal Matching"],
-    dsl: {
-      nodes: [
-        { "$": "start" },
-        "+",
-        { repeat: { type: "digit" }, min: 1, max: 3 },
-        " ",
-        { repeat: { type: "digit" }, count: 3 },
-        " ",
-        { repeat: { type: "digit" }, count: 3 },
-        " ",
-        { repeat: { type: "digit" }, count: 4 },
-        { "$": "end" }
-      ]
-    },
+    dsl: [
+      { "$": "start" },
+      "+",
+      { repeat: { type: "digit" }, min: 1, max: 3 },
+      " ",
+      { repeat: { type: "digit" }, count: 3 },
+      " ",
+      { repeat: { type: "digit" }, count: 3 },
+      " ",
+      { repeat: { type: "digit" }, count: 4 },
+      { "$": "end" }
+    ],
     testCases: [
       { input: "+1 555 123 4567", expected: true },
       { input: "+91 987 654 3210", expected: true },
@@ -30,30 +28,28 @@ export const EXAMPLE_REGISTRY = [
     title: "Email Validator",
     description: "A robust pattern for validating common email address formats.",
     features: ["Character Sets", "Quantifiers"],
-    dsl: {
-      nodes: [
-        { "$": "start" },
-        { capture: { name: "user", pattern: [{ repeat: { charSet: { chars: "a-zA-Z0-9._%+-", exclude: false } }, oneOrMore: true }] } },
-        "@",
-        { 
-          capture: { 
-            name: "domain", 
-            pattern: [
-              { repeat: { charSet: { chars: "a-zA-Z0-9-", exclude: false } }, oneOrMore: true }
-            ] 
-          } 
-        },
-        { 
-          repeat: [
-            ".",
-            { capture: { name: "tld", pattern: [{ repeat: { charSet: { chars: "a-zA-Z", exclude: false } }, min: 2 }] } }
-          ],
-          count: 1
-        },
-        { "$": "end" }
-      ],
-      flags: { ignoreCase: true }
-    },
+    dsl: [
+      { "$": "start" },
+      { capture: { name: "user", pattern: [{ repeat: { charSet: { chars: "a-zA-Z0-9._%+-", exclude: false } }, oneOrMore: true }] } },
+      "@",
+      { 
+        capture: { 
+          name: "domain", 
+          pattern: [
+            { repeat: { charSet: { chars: "a-zA-Z0-9-", exclude: false } }, oneOrMore: true }
+          ] 
+        } 
+      },
+      { 
+        repeat: [
+          ".",
+          { capture: { name: "tld", pattern: [{ repeat: { charSet: { chars: "a-zA-Z", exclude: false } }, min: 2 }] } }
+        ],
+        count: 1
+      },
+      { "$": "end" },
+      { flags: { ignoreCase: true } }
+    ],
     testCases: [
       { input: "hello@opentf.org", expected: true },
       { input: "user.name+tag@domain.com", expected: true },
@@ -67,15 +63,13 @@ export const EXAMPLE_REGISTRY = [
     title: "Secure Password",
     description: "Password policy: 8+ chars, at least one digit and one letter.",
     features: ["Lookarounds", "Quantifiers"],
-    dsl: {
-      nodes: [
-        { "$": "start" },
-        { lookaround: { type: "positiveLookahead", pattern: [{ repeat: { type: "any" }, zeroOrMore: true }, { repeat: { type: "digit" }, count: 1 }] } },
-        { lookaround: { type: "positiveLookahead", pattern: [{ repeat: { type: "any" }, zeroOrMore: true }, { charSet: { chars: "a-zA-Z" } }] } },
-        { repeat: { type: "any" }, min: 8 },
-        { "$": "end" }
-      ]
-    },
+    dsl: [
+      { "$": "start" },
+      { lookaround: { type: "positiveLookahead", pattern: [{ repeat: { type: "any" }, zeroOrMore: true }, { repeat: { type: "digit" }, count: 1 }] } },
+      { lookaround: { type: "positiveLookahead", pattern: [{ repeat: { type: "any" }, zeroOrMore: true }, { charSet: { chars: "a-zA-Z" } }] } },
+      { repeat: { type: "any" }, min: 8 },
+      { "$": "end" }
+    ],
     testCases: [
       { input: "Password123", expected: true },
       { input: "abc12345", expected: true },
@@ -88,17 +82,15 @@ export const EXAMPLE_REGISTRY = [
     title: "Basic HTML Tag",
     description: "Extracts content from simple HTML tags using named capture groups.",
     features: ["Backreferences", "Named Groups"],
-    dsl: {
-      nodes: [
-        "<",
-        { capture: { name: "tag", pattern: [{ repeat: { type: "word" }, oneOrMore: true }] } },
-        ">",
-        { capture: { name: "content", pattern: [{ repeat: { type: "any" }, zeroOrMore: true, lazy: true }] } },
-        "</",
-        { backreference: "tag" },
-        ">"
-      ]
-    },
+    dsl: [
+      "<",
+      { capture: { name: "tag", pattern: [{ repeat: { type: "word" }, oneOrMore: true }] } },
+      ">",
+      { capture: { name: "content", pattern: [{ repeat: { type: "any" }, zeroOrMore: true, lazy: true }] } },
+      "</",
+      { backreference: "tag" },
+      ">"
+    ],
     testCases: [
       { input: "<div>content</div>", expected: true },
       { input: "<span>hello</span>", expected: true },
@@ -110,19 +102,17 @@ export const EXAMPLE_REGISTRY = [
     title: "ES2024 Consonants",
     description: "Uses new ES2024 Set Subtraction to match consonants only.",
     features: ["Set Subtraction", "v Flag"],
-    dsl: {
-      nodes: [
-        { 
-          charSet: { 
-            subtraction: {
-              left: { chars: "a-z" },
-              right: { chars: "aeiou" }
-            }
-          } 
-        }
-      ],
-      flags: { unicodeSets: true, ignoreCase: true }
-    },
+    dsl: [
+      { 
+        charSet: { 
+          subtraction: {
+            left: { chars: "a-z" },
+            right: { chars: "aeiou" }
+          }
+        } 
+      },
+      { flags: { unicodeSets: true, ignoreCase: true } }
+    ],
     testCases: [
       { input: "B", expected: true },
       { input: "Z", expected: true },

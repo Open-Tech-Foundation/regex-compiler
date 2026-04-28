@@ -83,10 +83,21 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
   ])
 );
 
-export const RegexDSLSchema = z.object({
-  nodes: z.array(RegexNodeSchema),
-  flags: FlagsSchema.optional(),
-});
+export const RegexDSLSchema = z.union([
+  z.array(z.union([
+    RegexNodeSchema,
+    z.object({ flags: FlagsSchema })
+  ])),
+  z.string(),
+  z.object({
+    pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema)]),
+    flags: FlagsSchema.optional(),
+  }),
+  z.intersection(
+    RegexNodeSchema,
+    z.object({ flags: FlagsSchema.optional() })
+  )
+]);
 
 export type RegexDSL = z.infer<typeof RegexDSLSchema>;
 export type RegexNode = z.infer<typeof RegexNodeSchema>;
