@@ -32,8 +32,8 @@ export const CharSetSchema: z.ZodType<any> = z.lazy(() =>
 export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
   z.union([
     z.object({ literal: z.string() }),
-    z.object({ hex: z.string().length(2) }),
-    z.object({ unicode: z.string().min(4).max(5) }),
+    z.object({ hex: z.string().regex(/^[0-9a-fA-F]{2}$/, "Must be 2 hex digits") }),
+    z.object({ unicode: z.string().regex(/^[0-9a-fA-F]{4,5}$/, "Must be 4-5 hex digits") }),
     z.object({ charSet: CharSetSchema }),
     z.object({
       repeat: z.object({
@@ -45,18 +45,26 @@ export const RegexNodeSchema: z.ZodType<any> = z.lazy(() =>
         oneOrMore: z.boolean().optional(),
         zeroOrMore: z.boolean().optional(),
         lazy: z.boolean().optional(),
+      }).refine(data => {
+        if (data.min !== undefined && data.max !== undefined) {
+          return data.min <= data.max;
+        }
+        return true;
+      }, {
+        message: "min must be less than or equal to max",
+        path: ["min"]
       }),
     }),
-    z.object({ choice: z.array(z.array(RegexNodeSchema)) }),
+    z.object({ choice: z.array(z.array(RegexNodeSchema).min(1)).min(1) }),
     z.object({
       capture: z.object({
         name: z.string().optional(),
-        pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema)]),
+        pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema).min(1)]),
       }),
     }),
     z.object({
       group: z.object({
-        pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema)]),
+        pattern: z.union([RegexNodeSchema, z.array(RegexNodeSchema).min(1)]),
       }),
     }),
     z.object({ startOfLine: z.boolean() }),

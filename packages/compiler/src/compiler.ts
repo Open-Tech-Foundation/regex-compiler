@@ -206,17 +206,78 @@ function compileNode(node: RegexNode): string {
 
 export function validateDSL(input: any): ValidationResult {
   const result = RegexDSLSchema.safeParse(input);
+  const issues: { path: string; message: string }[] = [];
+
   if (!result.success) {
-    const issues = result.error.issues.map(e => ({
-      path: e.path.join("."),
-      message: e.message
+    issues.push(...result.error.issues.map(e => {
+      let message = e.message;
+      if (message === "Invalid input" && e.path[0] === "nodes" && e.path.length === 2) {
+        const node = input.nodes[e.path[1] as number];
+        if (node && typeof node === 'object') {
+          const keys = Object.keys(node);
+          message = `Unrecognized or invalid node structure. Found keys: ${keys.join(", ")}`;
+        }
+      }
+      return { path: e.path.join("."), message };
     }));
+  }
+
+  // Second pass: Logical validation (backreferences, duplicate names, etc.)
+  if (input && Array.isArray(input.nodes)) {
+    const names = new Set<string>();
+    let totalCaptures = 0;
+
+    function walk(nodes: any[], path: string, pass: 1 | 2) {
+      nodes.forEach((node, i) => {
+        const currentPath = `${path}.${i}`;
+        if (!node || typeof node !== 'object') return;
+
+        if (pass === 1 && node.capture) {
+          totalCaptures++;
+          if (node.capture.name) {
+            if (names.has(node.capture.name)) {
+              issues.push({ path: `${currentPath}.capture.name`, message: `Duplicate capture group name: "${node.capture.name}"` });
+            }
+            names.add(node.capture.name);
+          }
+        }
+
+        if (pass === 2 && node.backreference) {
+          const ref = node.backreference;
+          if (typeof ref === 'number') {
+            if (ref < 1 || ref > totalCaptures) {
+              issues.push({ path: `${currentPath}.backreference`, message: `Invalid backreference: Group ${ref} does not exist.` });
+            }
+          } else if (typeof ref === 'string') {
+            if (!names.has(ref)) {
+              issues.push({ path: `${currentPath}.backreference`, message: `Invalid backreference: Named group "${ref}" does not exist.` });
+            }
+          }
+        }
+
+        // Recursion
+        if (node.capture) walk(Array.isArray(node.capture.pattern) ? node.capture.pattern : [node.capture.pattern], `${currentPath}.capture.pattern`, pass);
+        if (node.group) walk(Array.isArray(node.group.pattern) ? node.group.pattern : [node.group.pattern], `${currentPath}.group.pattern`, pass);
+        if (node.repeat) walk(Array.isArray(node.repeat.type) ? node.repeat.type : [node.repeat.type], `${currentPath}.repeat.type`, pass);
+        if (node.lookaround) walk(Array.isArray(node.lookaround.pattern) ? node.lookaround.pattern : [node.lookaround.pattern], `${currentPath}.lookaround.pattern`, pass);
+        if (node.choice) {
+          node.choice.forEach((c: any, j: number) => walk(c, `${currentPath}.choice.${j}`, pass));
+        }
+      });
+    }
+
+    walk(input.nodes, "nodes", 1); // Pass 1: Collect
+    walk(input.nodes, "nodes", 2); // Pass 2: Verify
+  }
+
+  if (issues.length > 0) {
     return {
       success: false,
       error: issues.map(i => `${i.path}: ${i.message}`).join("; "),
       issues
     };
   }
+
   return {
     success: true,
     data: result.data

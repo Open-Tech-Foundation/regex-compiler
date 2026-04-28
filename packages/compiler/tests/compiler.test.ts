@@ -135,7 +135,7 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
     const dsl = { nodes: [{ unknownNode: true }] };
     const result = compileToJS(dsl) as any;
     expect(result.error).toBeDefined();
-    expect(result.error).toContain("nodes.0: Invalid input");
+    expect(result.error).toContain("nodes.0: Unrecognized or invalid node structure. Found keys: unknownNode");
   });
 
   test("count: 0 should generate {0}", () => {
@@ -243,22 +243,67 @@ describe("Regex Compiler - Edge Cases & Bug Fixes", () => {
     expect(result.pattern).toBe("(?:[a][b])*");
   });
 
-  test("negative count should return validation error", () => {
-    const dsl = {
-      nodes: [{ repeat: { type: "digit", count: -3 } }]
-    };
-    const result = compileToJS(dsl) as any;
-    expect(result.error).toBeDefined();
-    expect(result.error).toContain("count: Too small");
-  });
+  describe('Logical Validation', () => {
+    test('should catch duplicate capture group names', () => {
+      const dsl = {
+        nodes: [
+          { capture: { name: "user", pattern: [{ literal: "a" }] } },
+          { capture: { name: "user", pattern: [{ literal: "b" }] } }
+        ]
+      };
+      const result = compileToJS(dsl) as any;
+      expect(result).toHaveProperty('error');
+      expect(result.issues[0].message).toContain('Duplicate capture group name');
+    });
 
-  test("negative min/max should return validation error", () => {
-    const dsl = {
-      nodes: [{ repeat: { type: "digit", min: -1, max: -5 } }]
-    };
-    const result = compileToJS(dsl) as any;
-    expect(result.error).toBeDefined();
-    expect(result.error).toContain("min: Too small");
-    expect(result.error).toContain("max: Too small");
+    test('should catch invalid numeric backreferences', () => {
+      const dsl = {
+        nodes: [
+          { capture: { pattern: [{ literal: "a" }] } },
+          { backreference: 2 }
+        ]
+      };
+      const result = compileToJS(dsl) as any;
+      expect(result).toHaveProperty('error');
+      expect(result.issues[0].message).toContain('Group 2 does not exist');
+    });
+
+    test('should catch invalid named backreferences', () => {
+      const dsl = {
+        nodes: [
+          { capture: { name: "user", pattern: [{ literal: "a" }] } },
+          { backreference: "admin" }
+        ]
+      };
+      const result = compileToJS(dsl) as any;
+      expect(result).toHaveProperty('error');
+      expect(result.issues[0].message).toContain('Named group "admin" does not exist');
+    });
+
+    test('should catch logical quantifier errors (min > max)', () => {
+      const dsl = {
+        nodes: [
+          { repeat: { type: "digit", min: 5, max: 2 } }
+        ]
+      };
+      const result = compileToJS(dsl) as any;
+      expect(result).toHaveProperty('error');
+      expect(result.issues[0].message).toContain('min must be less than or equal to max');
+    });
+
+    test('should enforce strict hex and unicode formats', () => {
+      expect(compileToJS({ nodes: [{ hex: "G1" }] })).toHaveProperty('error');
+      expect(compileToJS({ nodes: [{ unicode: "123" }] })).toHaveProperty('error');
+    });
+
+    test('should reject empty choices and captures', () => {
+      expect(compileToJS({ nodes: [{ choice: [] }] })).toHaveProperty('error');
+      expect(compileToJS({ nodes: [{ capture: { pattern: [] } }] })).toHaveProperty('error');
+    });
+
+    test('should catch negative count/min/max', () => {
+      expect(compileToJS({ nodes: [{ repeat: { type: 'digit', count: -1 } }] })).toHaveProperty('error');
+      expect(compileToJS({ nodes: [{ repeat: { type: 'digit', min: -5 } }] })).toHaveProperty('error');
+    });
   });
 });
