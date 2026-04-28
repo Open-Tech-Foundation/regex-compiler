@@ -407,16 +407,25 @@ export function validateDSL(input: any): ValidationResult {
               }
             }
 
-            if ('charSet' in node && 'chars' in node.charSet) {
-              const chars = node.charSet.chars;
-              const rangeRegex = /(.)-(.)/g;
-              let match;
-              while ((match = rangeRegex.exec(chars)) !== null) {
-                if (match[1].charCodeAt(0) > match[2].charCodeAt(0)) {
-                  issues.push({
-                    path: `${currentPath}.charSet.chars`,
-                    message: `Range out of order in character set: ${match[0]}`,
-                  });
+            if ('charSet' in node) {
+              if (('intersection' in node.charSet || 'subtraction' in node.charSet) && !flags.unicodeSets) {
+                issues.push({
+                  path: currentPath,
+                  message: 'Character set intersection/subtraction requires the unicodeSets (v) flag.',
+                });
+              }
+
+              if ('chars' in node.charSet) {
+                const chars = node.charSet.chars;
+                const rangeRegex = /(.)-(.)/g;
+                let match;
+                while ((match = rangeRegex.exec(chars)) !== null) {
+                  if (match[1].charCodeAt(0) > match[2].charCodeAt(0)) {
+                    issues.push({
+                      path: `${currentPath}.charSet.chars`,
+                      message: `Range out of order in character set: ${match[0]}`,
+                    });
+                  }
                 }
               }
             }
