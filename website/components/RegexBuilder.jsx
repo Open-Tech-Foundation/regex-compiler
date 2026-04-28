@@ -1,55 +1,79 @@
-import { compileToJS } from '../../packages/compiler/src/compiler';
+import { onCleanup } from '@opentf/web';
 import { EXAMPLE_REGISTRY } from '../data/examples';
 import DSLEditor from './DSLEditor';
 import CompilationPreview from './CompilationPreview';
 import TestBench from './TestBench';
 import SampleLibraryModal from './SampleLibraryModal';
+import CompilerWorker from '../compiler.worker?worker';
 
 export default function RegexBuilder() {
-  const selectedExample = $state(EXAMPLE_REGISTRY[0]);
-  const dslText = $state(JSON.stringify(EXAMPLE_REGISTRY[0].dsl, null, 2));
-  const manualTestString = $state('');
-  const isLibraryOpen = $state(false);
-  const isCopied = $state(false);
+  let selectedExample = $state(EXAMPLE_REGISTRY[0]);
+  let dslText = $state(JSON.stringify(EXAMPLE_REGISTRY[0].dsl, null, 2));
+  let manualTestString = $state('');
+  let isLibraryOpen = $state(false);
+  let isCopied = $state(false);
+  let workerResult = $state(null);
+  let isCompiling = $state(false);
 
-  const compilationResult = $derived(() => {
+  // Persistent Worker Reference
+  let worker = $state(null);
+
+  $effect(() => {
+    const w = new CompilerWorker();
+    
+    w.onmessage = (e) => {
+      if (e.data.success) {
+        workerResult = e.data.result;
+      } else {
+        workerResult = { error: e.data.error };
+      }
+      isCompiling = false;
+    };
+
+    worker = w;
+
+    onCleanup(() => {
+      if (worker) worker.terminate();
+    });
+  });
+
+  $effect(() => {
     try {
       const dsl = JSON.parse(dslText);
-      return compileToJS(dsl);
+      if (worker) {
+        isCompiling = true;
+        worker.postMessage({
+          dsl,
+          testCases: selectedExample.testCases,
+        });
+      }
     } catch (e) {
-      return { error: 'Invalid JSON format' };
+      workerResult = { error: 'Invalid JSON format' };
+      isCompiling = false;
     }
   });
 
   const compiledRegex = $derived(() => {
-    if (compilationResult && 'pattern' in compilationResult) {
-      return `/${compilationResult.pattern}/${compilationResult.flags || ''}`;
+    if (workerResult && 'pattern' in workerResult) {
+      return `/${workerResult.pattern}/${workerResult.flags || ''}`;
     }
     return null;
   });
 
-  const checkMatch = (input) => {
-    if (!compilationResult || compilationResult.error) return false;
+  const testResults = $derived(() => (workerResult && workerResult.testResults ? workerResult.testResults : []));
+
+  const passedCount = $derived(() => (workerResult ? workerResult.passedCount : 0));
+
+  const manualMatch = $derived(() => {
+    if (!workerResult || workerResult.error) return false;
     try {
-      const re = new RegExp(compilationResult.pattern, compilationResult.flags);
-      return re.test(input);
+      const re = new RegExp(workerResult.pattern, workerResult.flags);
+      re.lastIndex = 0;
+      return re.test(manualTestString);
     } catch (e) {
       return false;
     }
-  };
-
-  const testResults = $derived(() => {
-    return selectedExample.testCases.map((tc) => {
-      const isMatch = checkMatch(tc.input);
-      return {
-        ...tc,
-        isMatch,
-        isCorrect: isMatch === tc.expected,
-      };
-    });
   });
-
-  const manualMatch = $derived(() => checkMatch(manualTestString));
 
   const loadExample = (example) => {
     selectedExample = example;
@@ -65,16 +89,21 @@ export default function RegexBuilder() {
     setTimeout(() => (isCopied = false), 2000);
   };
 
+  const resetDSL = () => {
+    dslText = JSON.stringify(selectedExample.dsl, null, 2);
+  };
+
   return (
     <div className="flex h-full w-full overflow-hidden">
       {/* Left Column */}
       <div className="w-1/2 h-full border-r border-[#27272a]">
         <DSLEditor
           value={dslText}
-          error={compilationResult?.error}
-          issues={compilationResult?.issues}
+          error={workerResult ? workerResult.error : null}
+          issues={workerResult ? workerResult.issues : null}
           onChange={(val) => (dslText = val)}
           onOpenLibrary={() => (isLibraryOpen = true)}
+          onReset={resetDSL}
         />
       </div>
 
@@ -82,9 +111,10 @@ export default function RegexBuilder() {
       <div className="w-1/2 h-full bg-[#09090b] overflow-y-auto custom-scrollbar">
         <div className="p-6 flex flex-col gap-6">
           <CompilationPreview
-            result={compilationResult}
+            result={workerResult}
             compiledRegex={compiledRegex}
             isCopied={isCopied}
+            isCompiling={isCompiling}
             onCopy={copyToClipboard}
           />
 
@@ -93,6 +123,8 @@ export default function RegexBuilder() {
             onManualInput={(val) => (manualTestString = val)}
             manualMatch={manualMatch}
             testResults={testResults}
+            passedCount={passedCount}
+            result={workerResult}
           />
         </div>
       </div>

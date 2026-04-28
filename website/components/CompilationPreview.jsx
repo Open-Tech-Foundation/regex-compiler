@@ -1,10 +1,23 @@
-export default function CompilationPreview({ result, compiledRegex, isCopied, onCopy }) {
+export default function CompilationPreview({
+  result,
+  compiledRegex,
+  isCopied,
+  isCompiling,
+  onCopy,
+}) {
   return (
     <section>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
-          Compiled Output
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+            Compiled Output
+          </h2>
+          {isCompiling && (
+            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[9px] font-bold text-blue-400 uppercase tracking-wider animate-pulse">
+              Compiling...
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-[#09090b] border border-[#27272a] rounded-lg cursor-default opacity-80 shadow-sm">
           <div className="w-4 h-4 bg-[#f7df1e] text-black flex items-center justify-center font-bold text-[8px] rounded-sm shrink-0">
             JS
@@ -14,8 +27,10 @@ export default function CompilationPreview({ result, compiledRegex, isCopied, on
           </span>
         </div>
       </div>
-      <div className={`relative group p-8 bg-zinc-900/30 border border-zinc-800 rounded-2xl`}>
-        {result?.error ? (
+      <div
+        className={`relative group p-8 bg-zinc-900/30 border border-zinc-800 rounded-2xl transition-opacity duration-300 ${isCompiling ? 'opacity-50' : 'opacity-100'}`}
+      >
+        {result && result.error ? (
           <div className="flex items-start gap-4 text-red-400">
             <svg
               className="w-5 h-5 shrink-0 mt-0.5"

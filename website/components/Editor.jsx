@@ -52,36 +52,14 @@ export default function Editor({ value, onChange, issues }) {
 
     const markers = issues
       .map((issue) => {
-        const path = issue.path.split('.');
-        const lastKey = path[path.length - 1];
-        let actualKey = lastKey;
-
-        let matches = model.findMatches(`"${lastKey}"`, false, false, true, null, true);
-
-        // If not found (e.g. index path 'nodes.0'), look for keys mentioned in the message
-        if (matches.length === 0) {
-          const foundKeysMatch = issue.message.match(/Found keys: (.*)/);
-          if (foundKeysMatch) {
-            const keys = foundKeysMatch[1].split(', ');
-            for (const key of keys) {
-              const m = model.findMatches(`"${key}"`, false, false, true, null, true);
-              if (m.length > 0) {
-                matches = m;
-                actualKey = key;
-                break;
-              }
-            }
-          }
-        }
-
+        const matches = model.findMatches(`"${issue.path.split('.').pop()}"`, false, false, true, null, true);
         if (matches.length > 0) {
-          // Find the match that corresponds to the correct index if possible
           const match = matches[0];
           return {
             startLineNumber: match.range.startLineNumber,
             startColumn: match.range.startColumn,
             endLineNumber: match.range.endLineNumber,
-            endColumn: match.range.startColumn + actualKey.length + 2,
+            endColumn: match.range.startColumn + 100,
             message: issue.message,
             severity: monaco.MarkerSeverity.Error,
           };
@@ -90,21 +68,16 @@ export default function Editor({ value, onChange, issues }) {
       })
       .filter((m) => m !== null);
 
-    // If no markers found for paths, fallback to first line for first error
-    if (markers.length === 0 && issues.length > 0) {
-      markers.push({
-        startLineNumber: 1,
-        startColumn: 1,
-        endLineNumber: 1,
-        endColumn: 100,
-        message: issues[0].message,
-        severity: monaco.MarkerSeverity.Error,
-      });
-    }
-
     setTimeout(() => {
       monaco.editor.setModelMarkers(model, 'dsl-validation', markers);
     }, 0);
+  });
+
+  onCleanup(() => {
+    if (editor) {
+      editor.dispose();
+      editor = null;
+    }
   });
 
   return (

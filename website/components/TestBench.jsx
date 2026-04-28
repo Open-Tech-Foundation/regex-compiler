@@ -1,4 +1,12 @@
-export default function TestBench({ manualTestString, onManualInput, manualMatch, testResults }) {
+
+export default function TestBench({
+  manualTestString,
+  onManualInput,
+  manualMatch,
+  testResults,
+  passedCount,
+  result,
+}) {
   return (
     <div className="grid grid-cols-1 gap-6">
       {/* Manual Test */}
@@ -29,37 +37,39 @@ export default function TestBench({ manualTestString, onManualInput, manualMatch
             Predefined Test Suite
           </h2>
           <span className="text-[11px] font-black text-zinc-300 uppercase tracking-widest bg-zinc-800/80 px-3 py-1 rounded-lg border border-zinc-700/50">
-            {testResults.filter((r) => r.isCorrect).length} / {testResults.length} Passed
+            {passedCount} / {testResults.length} Passed
           </span>
         </div>
 
         <div className="space-y-3">
-          {testResults.map((result, idx) => (
+          {testResults.map((tr, idx) => (
             <div
               key={idx}
-              className={`flex items-center justify-between p-3.5 bg-[#09090b] border rounded-xl transition-all ${result.isCorrect ? 'border-[#27272a] hover:border-zinc-700' : 'border-red-500/40 bg-red-500/[0.03]'}`}
+              className={`flex items-center justify-between p-3.5 bg-[#09090b] border rounded-xl transition-all ${tr.isCorrect ? 'border-[#27272a] hover:border-zinc-700' : 'border-red-500/40 bg-red-500/[0.03]'}`}
             >
               <div className="flex flex-col gap-1 overflow-hidden mr-4">
                 <div className="flex items-center gap-2">
-                  {result.isCorrect ? (
+                  {tr.isCorrect ? (
                     <span className="text-green-500 text-xs font-bold">✓</span>
                   ) : (
                     <span className="text-red-500 text-xs font-bold">✗</span>
                   )}
-                  <code className="text-sm text-white font-mono truncate">
-                    {result.input || <span className="italic text-zinc-500">empty string</span>}
-                  </code>
+                  <span className="font-mono text-xs text-white truncate">{tr.input}</span>
                 </div>
-                <span
-                  className={`text-[10px] font-bold uppercase tracking-tight pl-5 ${result.expected ? 'text-green-500/80' : 'text-red-500/80'}`}
-                >
-                  {result.expected ? 'Expected: Match' : 'Expected: Fail'}
-                </span>
+                <div className="text-[10px] text-zinc-500 font-medium">
+                  Expected:{' '}
+                  <span className={tr.expected ? 'text-blue-400/80' : 'text-purple-400/80'}>
+                    {tr.expected ? 'Match' : 'Fail'}
+                  </span>
+                </div>
               </div>
-              <div
-                className={`shrink-0 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${result.isMatch ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}
-              >
-                {result.isMatch ? 'Matched' : 'Failed'}
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span
+                  className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${tr.isMatch ? 'text-green-400' : 'text-red-400'}`}
+                >
+                  {tr.isMatch ? 'Matched' : 'Failed'}
+                </span>
               </div>
             </div>
           ))}

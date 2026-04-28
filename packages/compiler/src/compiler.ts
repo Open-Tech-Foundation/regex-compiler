@@ -6,6 +6,7 @@ import type {
   CompiledRegex,
   ValidationResult,
   CharSetType,
+  DSLMapping,
 } from './types';
 import { RegexDSLSchema } from './schema';
 
@@ -21,7 +22,6 @@ function isAtomic(pattern: string): boolean {
       return true;
   }
 
-  // Balanced bracket/parenthesis check
   const opener = pattern[0];
   const closer = opener === '[' ? ']' : opener === '(' ? ')' : null;
 
@@ -69,20 +69,6 @@ function mapCharClass(type: CharClassType): string {
   }
 }
 
-function compileFlags(flags?: Flags): string {
-  if (!flags) return '';
-  let f = '';
-  if (flags.global) f += 'g';
-  if (flags.ignoreCase) f += 'i';
-  if (flags.multiline) f += 'm';
-  if (flags.dotAll) f += 's';
-  if (flags.unicode) f += 'u';
-  if (flags.sticky) f += 'y';
-  if (flags.indices) f += 'd';
-  if (flags.unicodeSets) f += 'v';
-  return f;
-}
-
 function compileCharSet(node: CharSetType): string {
   if ('chars' in node) {
     return `${node.exclude ? '^' : ''}${node.chars}`;
@@ -97,102 +83,155 @@ function compileCharSet(node: CharSetType): string {
   return '';
 }
 
-function compileNode(node: any): string {
+interface CompileContext {
+  pattern: string;
+  mappings: DSLMapping[];
+}
+
+function compileNodeInternal(node: any, path: string, ctx: CompileContext): void {
+  const start = ctx.pattern.length;
+
   if (typeof node === 'string') {
-    return escapeLiteral(node);
+    ctx.pattern += escapeLiteral(node);
+    ctx.mappings.push({ path, start, end: ctx.pattern.length });
+    return;
   }
 
   if (node.type !== undefined) {
-    return mapCharClass(node.type);
+    ctx.pattern += mapCharClass(node.type);
+    ctx.mappings.push({ path, start, end: ctx.pattern.length });
+    return;
   }
 
   if (node.hex !== undefined) {
-    return `\\x${node.hex}`;
+    ctx.pattern += `\\x${node.hex}`;
+    ctx.mappings.push({ path, start, end: ctx.pattern.length });
+    return;
   }
 
   if ('unicode' in node) {
-    return node.unicode.length > 4 ? `\\u{${node.unicode}}` : `\\u${node.unicode}`;
+    ctx.pattern += node.unicode.length > 4 ? `\\u{${node.unicode}}` : `\\u${node.unicode}`;
+    ctx.mappings.push({ path, start, end: ctx.pattern.length });
+    return;
   }
 
   if ('charSet' in node) {
-    return `[${compileCharSet(node.charSet)}]`;
+    ctx.pattern += `[${compileCharSet(node.charSet)}]`;
+    ctx.mappings.push({ path, start, end: ctx.pattern.length });
+    return;
   }
 
   if ('unicodeProperty' in node) {
     const { property, exclude } = node.unicodeProperty;
-    return `\\${exclude ? 'P' : 'p'}{${property}}`;
+    ctx.pattern += `\\${exclude ? 'P' : 'p'}{${property}}`;
+    ctx.mappings.push({ path, start, end: ctx.pattern.length });
+    return;
   }
 
   if ('$' in node) {
     switch (node.$) {
       case 'start':
-        return '^';
+        ctx.pattern += '^';
+        break;
       case 'end':
-        return '$';
+        ctx.pattern += '$';
+        break;
       case 'boundary':
-        return '\\b';
+        ctx.pattern += '\\b';
+        break;
       case 'notBoundary':
-        return '\\B';
+        ctx.pattern += '\\B';
+        break;
     }
+    ctx.mappings.push({ path, start, end: ctx.pattern.length });
+    return;
   }
 
   if ('choice' in node) {
-    const options = node.choice.map((option) => option.map(compileNode).join(''));
-    return `(?:${options.join('|')})`;
+    ctx.pattern += '(?:';
+    node.choice.forEach((option: any[], i: number) => {
+      if (i > 0) ctx.pattern += '|';
+      option.forEach((item, j) => {
+        compileNodeInternal(item, `${path}.choice.${i}.${j}`, ctx);
+      });
+    });
+    ctx.pattern += ')';
+    ctx.mappings.push({ path, start, end: ctx.pattern.length });
+    return;
   }
 
   if ('capture' in node) {
     const { name, pattern } = node.capture;
-    const compiledPattern = Array.isArray(pattern)
-      ? pattern.map(compileNode).join('')
-      : compileNode(pattern);
-
-    if (name) {
-      return `(?<${name}>${compiledPattern})`;
+    ctx.pattern += name ? `(?<${name}>` : '(';
+    if (Array.isArray(pattern)) {
+      pattern.forEach((item, i) => compileNodeInternal(item, `${path}.capture.pattern.${i}`, ctx));
+    } else {
+      compileNodeInternal(pattern, `${path}.capture.pattern`, ctx);
     }
-    return `(${compiledPattern})`;
+    ctx.pattern += ')';
+    ctx.mappings.push({ path, start, end: ctx.pattern.length });
+    return;
   }
 
   if ('group' in node) {
     const { pattern } = node.group;
-    const compiledPattern = Array.isArray(pattern)
-      ? pattern.map(compileNode).join('')
-      : compileNode(pattern);
-    return `(?:${compiledPattern})`;
+    ctx.pattern += '(?:';
+    if (Array.isArray(pattern)) {
+      pattern.forEach((item, i) => compileNodeInternal(item, `${path}.group.pattern.${i}`, ctx));
+    } else {
+      compileNodeInternal(pattern, `${path}.group.pattern`, ctx);
+    }
+    ctx.pattern += ')';
+    ctx.mappings.push({ path, start, end: ctx.pattern.length });
+    return;
   }
 
   if ('lookaround' in node) {
     const { type, pattern } = node.lookaround;
-    const compiledPattern = Array.isArray(pattern)
-      ? pattern.map(compileNode).join('')
-      : compileNode(pattern);
-
     switch (type) {
       case 'positiveLookahead':
-        return `(?=${compiledPattern})`;
+        ctx.pattern += '(?=';
+        break;
       case 'negativeLookahead':
-        return `(?!${compiledPattern})`;
+        ctx.pattern += '(?!';
+        break;
       case 'positiveLookbehind':
-        return `(?<=${compiledPattern})`;
+        ctx.pattern += '(?<=';
+        break;
       case 'negativeLookbehind':
-        return `(?<!${compiledPattern})`;
+        ctx.pattern += '(?<!';
+        break;
     }
+    if (Array.isArray(pattern)) {
+      pattern.forEach((item, i) =>
+        compileNodeInternal(item, `${path}.lookaround.pattern.${i}`, ctx),
+      );
+    } else {
+      compileNodeInternal(pattern, `${path}.lookaround.pattern`, ctx);
+    }
+    ctx.pattern += ')';
+    ctx.mappings.push({ path, start, end: ctx.pattern.length });
+    return;
   }
 
   if ('backreference' in node) {
     const ref = node.backreference;
-    if (typeof ref === 'number') {
-      return `\\${ref}`;
-    }
-    return `\\k<${ref}>`;
+    ctx.pattern += typeof ref === 'number' ? `\\${ref}` : `\\k<${ref}>`;
+    ctx.mappings.push({ path, start, end: ctx.pattern.length });
+    return;
   }
 
   if ('repeat' in node) {
     const { repeat: type, count, min, max, optional, oneOrMore, zeroOrMore, lazy } = node;
-    let base = Array.isArray(type)
-      ? type.map(compileNode).join('')
-      : compileNode(type as RegexNode);
+    const innerCtx: CompileContext = { pattern: '', mappings: [] };
 
+    if (Array.isArray(type)) {
+      type.forEach((item, i) => compileNodeInternal(item, `${path}.repeat.type.${i}`, innerCtx));
+    } else {
+      compileNodeInternal(type, `${path}.repeat.type`, innerCtx);
+    }
+
+    let base = innerCtx.pattern;
     if (!isAtomic(base)) {
       base = `(?:${base})`;
     }
@@ -202,19 +241,29 @@ function compileNode(node: any): string {
     else if (oneOrMore) quantifier = '+';
     else if (zeroOrMore) quantifier = '*';
     else if (count !== undefined) {
-      if (count === 0) quantifier = '{0}';
-      else if (count > 1) quantifier = `{${count}}`;
-    } else if (min !== undefined && max !== undefined) quantifier = `{${min},${max}}`;
-    else if (min !== undefined) quantifier = `{${min},}`;
+      quantifier = count === 0 ? '{0}' : count > 1 ? `{${count}}` : '';
+    } else if (min !== undefined && max !== undefined) {
+      quantifier = `{${min},${max}}`;
+    } else if (min !== undefined) {
+      quantifier = `{${min},}`;
+    }
 
     if (lazy && quantifier) {
       quantifier += '?';
     }
 
-    return `${base}${quantifier}`;
-  }
+    // Adjust inner mappings if we added a non-capturing group
+    const offset = !isAtomic(innerCtx.pattern) ? 3 : 0; // length of "(?:"
+    innerCtx.mappings.forEach((m) => {
+      m.start += start + offset;
+      m.end += start + offset;
+    });
 
-  return '';
+    ctx.pattern += base + quantifier;
+    ctx.mappings.push(...innerCtx.mappings);
+    ctx.mappings.push({ path, start, end: ctx.pattern.length });
+    return;
+  }
 }
 
 export function validateDSL(input: any): ValidationResult {
@@ -222,18 +271,13 @@ export function validateDSL(input: any): ValidationResult {
   const issues: { path: string; message: string }[] = [];
 
   if (!result.success) {
-    // If we have a top-level union error, try to find errors within array items
-    const flattened = result.error.flatten();
-
     result.error.issues.forEach((e) => {
       let message = e.message;
       let path = e.path.join('.');
 
-      // Deep search for unrecognized nodes in arrays
       function findDeepestError(issue: any): any {
         if (issue.code === 'invalid_union' && issue.errors) {
           for (const issuesArray of issue.errors) {
-            // issuesArray is an array of issues for one union branch
             for (const subIssue of Array.isArray(issuesArray)
               ? issuesArray
               : issuesArray.issues || []) {
@@ -263,7 +307,6 @@ export function validateDSL(input: any): ValidationResult {
         }
       }
 
-      // If it's still just "Invalid input", try a simpler path check
       if (message === 'Invalid input' && e.path.length > 0) {
         path = e.path.join('.');
       }
@@ -272,7 +315,6 @@ export function validateDSL(input: any): ValidationResult {
     });
   }
 
-  // Second pass: Logical validation (backreferences, duplicate names, etc.)
   if (result.success) {
     const data = result.data;
     let nodesToWalk: any[] = [];
@@ -329,7 +371,6 @@ export function validateDSL(input: any): ValidationResult {
           }
         }
 
-        // Recursion
         if (node.capture)
           walk(
             Array.isArray(node.capture.pattern) ? node.capture.pattern : [node.capture.pattern],
@@ -394,33 +435,35 @@ export function compileToJS(
   const data = validation.data;
   let nodes: any[] = [];
   let flags: Flags = {};
+  let rootPath = 'root';
 
   if (Array.isArray(data)) {
-    // Zero-wrapper array form
-    data.forEach((item) => {
+    data.forEach((item, i) => {
       if (typeof item === 'object' && item !== null && 'flags' in item) {
         flags = { ...flags, ...item.flags };
       } else {
-        nodes.push(item);
+        nodes.push({ node: item, path: `${rootPath}.${i}` });
       }
     });
   } else if (typeof data === 'string') {
-    // Direct string form
-    nodes = [data];
+    nodes = [{ node: data, path: rootPath }];
   } else if (typeof data === 'object') {
-    // Explicit pattern form or single node form
     if ('pattern' in data) {
-      nodes = Array.isArray(data.pattern) ? data.pattern : [data.pattern];
+      const p = Array.isArray(data.pattern) ? data.pattern : [data.pattern];
+      p.forEach((item: any, i: number) => {
+        nodes.push({ node: item, path: `${rootPath}.pattern.${i}` });
+      });
       flags = data.flags || {};
     } else {
-      // It's a single node that might have flags intersection
       const { flags: nodeFlags, ...node } = data;
-      nodes = [node];
+      nodes = [{ node, path: rootPath }];
       flags = nodeFlags || {};
     }
   }
 
-  const pattern = nodes.map(compileNode).join('');
+  const ctx: CompileContext = { pattern: '', mappings: [] };
+  nodes.forEach((n) => compileNodeInternal(n.node, n.path, ctx));
+
   const flagStr = Object.entries(flags || {})
     .filter(([_, value]) => value)
     .map(([key]) => {
@@ -447,5 +490,5 @@ export function compileToJS(
     })
     .join('');
 
-  return { pattern, flags: flagStr };
+  return { pattern: ctx.pattern, flags: flagStr, mappings: ctx.mappings };
 }
