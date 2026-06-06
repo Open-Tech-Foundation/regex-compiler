@@ -4,7 +4,7 @@
   <p>A powerful regex builder and compiler that transforms human-friendly DSL into optimized Regular Expressions.</p>
   <p>Part of the <a href="https://github.com/Open-Tech-Foundation">Open Tech Foundation</a> ecosystem.</p>
   <p>
-    <a href="https://regex-compiler.opentf.workers.dev/"><strong>Regex Workbench →</strong></a>
+    <a href="https://regex-compiler.opentechf.org/"><strong>Regex Workbench →</strong></a>
   </p>
 </div>
 
